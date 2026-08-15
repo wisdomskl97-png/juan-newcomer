@@ -13,6 +13,8 @@
     showKakaoHelp: false,
     copiedSummary: false,
     copiedUnivMsg: false,
+    sharedSummary: false,
+    sharedUnivMsg: false,
     showUnivMsg: false,
     summaryFilter: 'all',
     editIndex: null,
@@ -175,9 +177,13 @@
     }
     try { navigator.clipboard.writeText(text).then(done, done); } catch (e) { done(); }
   }
-  function shareText(text) {
+  // Falls back to copying when navigator.share isn't available (most
+  // desktop browsers). fallbackFlag must be the button's OWN state key so
+  // the button that was actually pressed shows the "copied" feedback,
+  // not some other button on screen.
+  function shareText(text, fallbackFlag) {
     if (navigator.share) { navigator.share({ text: text }).catch(function () {}); }
-    else { copyText(text, 'copiedSummary'); }
+    else { copyText(text, fallbackFlag); }
   }
 
   function pinPress(d) {
@@ -579,7 +585,7 @@
       }
       html += '<div class="summary-actions">';
       html += '<button class="act-primary" data-action="copySummary">' + (s.copiedSummary ? '✓ 복사됨' : '복사하기 · Copy') + '</button>';
-      html += '<button class="act-secondary" data-action="shareSummary">공유하기 · Share</button>';
+      html += '<button class="act-secondary" data-action="shareSummary">' + (s.sharedSummary ? '✓ 복사됨' : '공유하기 · Share') + '</button>';
       html += '</div>';
     }
 
@@ -627,7 +633,7 @@
       '<div class="univ-msg-box"><pre>' + esc(univMessage()) + '</pre></div>' +
       '<div class="sheet-actions">' +
       '<button style="color:#fff;background:#E07B2C" data-action="copyUnivMsg">' + (state.copiedUnivMsg ? '✓ 복사됨' : '복사하기 · Copy') + '</button>' +
-      '<button style="color:#D06C1E;background:#FBEEDF" data-action="shareUnivMsg">공유하기 · Share</button>' +
+      '<button style="color:#D06C1E;background:#FBEEDF" data-action="shareUnivMsg">' + (state.sharedUnivMsg ? '✓ 복사됨' : '공유하기 · Share') + '</button>' +
       '</div></div></div>'
     );
   }
@@ -774,9 +780,9 @@
     openUnivMsg: function () { update(function () { state.showUnivMsg = true; }); },
     closeUnivMsg: function () { update(function () { state.showUnivMsg = false; }); },
     copyUnivMsg: function () { copyText(univMessage(), 'copiedUnivMsg'); },
-    shareUnivMsg: function () { shareText(univMessage()); },
+    shareUnivMsg: function () { shareText(univMessage(), 'sharedUnivMsg'); },
     copySummary: function () { copyText(summaryText(), 'copiedSummary'); },
-    shareSummary: function () { shareText(summaryText()); }
+    shareSummary: function () { shareText(summaryText(), 'sharedSummary'); }
   };
 
   app.addEventListener('click', function (e) {
