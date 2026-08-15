@@ -15,7 +15,7 @@ var TIMEZONE = 'Australia/Sydney';
 
 // Keep in sync with CONFIG.teamPin in docs/script.js.
 // This is a soft gate, not real access control.
-var TEAM_PIN = '0000';
+var TEAM_PIN = '0691';
 
 function doGet(e) {
   var action = e.parameter && e.parameter.action;

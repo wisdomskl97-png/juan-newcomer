@@ -2,7 +2,7 @@
   'use strict';
 
   var CONFIG = {
-    teamPin: '0000',
+    teamPin: '0691',
     apiUrl: 'https://script.google.com/macros/s/AKfycbwtvopCUgaPnE8jvt0rOjxcH6I4mgSJyQE6AiumSg_bM034KdKX9VWLSYLogz7GdXOO/exec'
   };
 
@@ -216,6 +216,23 @@
     else { copyText(text, fallbackFlag); }
   }
 
+  // A real browser reload (not an in-app screen change) always wipes
+  // in-memory state back to the welcome screen — sessionStorage is the
+  // only thing that survives it. We only remember "team is on the
+  // summary screen", not any actual data, so a refresh there re-fetches
+  // from the sheet rather than resurrecting stale state.
+  var TEAM_SESSION_KEY = 'juanTeamSession';
+  function persistTeamSession(onSummary) {
+    try {
+      if (onSummary) sessionStorage.setItem(TEAM_SESSION_KEY, '1');
+      else sessionStorage.removeItem(TEAM_SESSION_KEY);
+    } catch (e) {}
+  }
+  function hadTeamSession() {
+    try { return sessionStorage.getItem(TEAM_SESSION_KEY) === '1'; }
+    catch (e) { return false; }
+  }
+
   function pinPress(d) {
     var cur = state.pinInput;
     if (cur.length >= 4) return;
@@ -223,6 +240,7 @@
     if (next.length < 4) { update(function () { state.pinInput = next; state.pinError = false; }); return; }
     if (next === String(CONFIG.teamPin)) {
       update(function () { state.teamUnlocked = true; state.pinInput = ''; state.pinError = false; });
+      persistTeamSession(true);
       go('summary');
       loadSummaryData();
     } else {
@@ -596,7 +614,10 @@
 
     var html = '<div class="screen ' + enter + '" style="padding:0">';
     html += '<div class="summary-head">';
-    html += '<div class="summary-head-row"><span class="label">팀원용 · TEAM ONLY</span><button class="btn-pill" style="background:rgba(255,255,255,.1);color:#B7BBCB" data-action="backToApp">← 앱으로</button></div>';
+    html += '<div class="summary-head-row"><span class="label">팀원용 · TEAM ONLY</span><div style="display:flex;gap:8px">' +
+      '<button class="btn-pill" style="background:rgba(255,255,255,.1);color:#B7BBCB" data-action="reloadSummary" title="새로고침 · Refresh"' + (s.summaryLoading ? ' disabled' : '') + '>' + (s.summaryLoading ? '⟳' : '↻') + ' 새로고침</button>' +
+      '<button class="btn-pill" style="background:rgba(255,255,255,.1);color:#B7BBCB" data-action="backToApp">← 앱으로</button>' +
+      '</div></div>';
     html += '<div class="summary-tabs">';
     html += '<button class="summary-tab ' + (s.viewMode === 'today' ? 'active' : '') + '" data-action="setViewToday">오늘</button>';
     html += '<button class="summary-tab ' + (s.viewMode === 'archive' ? 'active' : '') + '" data-action="setViewArchive">지난 기록</button>';
@@ -842,7 +863,7 @@
       if (state.teamUnlocked) { go('summary'); loadSummaryData(); }
       else { update(function () { state.pinInput = ''; state.pinError = false; }); go('pin'); }
     },
-    backToApp: function () { go('welcome'); },
+    backToApp: function () { persistTeamSession(false); go('welcome'); },
     reloadSummary: loadSummaryData,
     pinCancel: function () { update(function () { state.pinInput = ''; state.pinError = false; }); go('welcome'); },
     pinPress: function (el) { pinPress(el.getAttribute('data-value')); },
@@ -927,5 +948,10 @@
     });
   });
 
+  if (hadTeamSession()) {
+    state.teamUnlocked = true;
+    state.screen = 'summary';
+  }
   render();
+  if (state.screen === 'summary') loadSummaryData();
 })();
