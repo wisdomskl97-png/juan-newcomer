@@ -16,6 +16,7 @@
     sharedSummary: false,
     sharedUnivMsg: false,
     showUnivMsg: false,
+    showSummaryPreview: false,
     summaryFilter: 'all',
     editIndex: null,
     editDraft: {},
@@ -63,13 +64,14 @@
   });
 
   function anyOverlay() {
-    return state.showDiscard || state.editDeleteArm || state.showKakaoHelp || state.showUnivMsg || state.editIndex !== null;
+    return state.showDiscard || state.editDeleteArm || state.showKakaoHelp || state.showUnivMsg || state.showSummaryPreview || state.editIndex !== null;
   }
   function closeTopOverlay() {
     if (state.showDiscard) return update(function () { state.showDiscard = false; });
     if (state.editDeleteArm) return update(function () { state.editDeleteArm = false; });
     if (state.showKakaoHelp) return update(function () { state.showKakaoHelp = false; });
     if (state.showUnivMsg) return update(function () { state.showUnivMsg = false; });
+    if (state.showSummaryPreview) return update(function () { state.showSummaryPreview = false; });
     if (state.editIndex !== null) return requestClose();
   }
   // Mirrors what each screen's own "Back"/"Home" button already does.
@@ -743,10 +745,7 @@
       if (hasUnivToday) {
         html += '<button class="univ-msg-btn" data-action="openUnivMsg">🎓 대학목장 전달 메시지 만들기</button>';
       }
-      html += '<div class="summary-actions">';
-      html += '<button class="act-primary" data-action="copySummary">' + (s.copiedSummary ? '✓ 복사됨' : '복사하기 · Copy') + '</button>';
-      html += '<button class="act-secondary" data-action="shareSummary">' + (s.sharedSummary ? '✓ 복사됨' : '공유하기 · Share') + '</button>';
-      html += '</div>';
+      html += '<button class="act-primary act-full" data-action="openSummaryPreview">오늘 등록 요약 보기</button>';
     }
 
     html += '</div></div>';
@@ -794,6 +793,20 @@
       '<div class="sheet-actions">' +
       '<button style="color:#fff;background:#E07B2C" data-action="copyUnivMsg">' + (state.copiedUnivMsg ? '✓ 복사됨' : '복사하기 · Copy') + '</button>' +
       '<button style="color:#D06C1E;background:#FBEEDF" data-action="shareUnivMsg">' + (state.sharedUnivMsg ? '✓ 복사됨' : '공유하기 · Share') + '</button>' +
+      '</div></div></div>'
+    );
+  }
+
+  function renderSummaryPreview(enter) {
+    if (!state.showSummaryPreview) return '';
+    return (
+      '<div class="overlay ' + enter + '" data-overlay="summarypreview"><div class="sheet">' +
+      '<div class="sheet-head"><h3>오늘 등록 요약</h3><button class="btn-pill" data-action="closeSummaryPreview">닫기</button></div>' +
+      '<p class="sheet-sub">아래 내용을 복사하거나 바로 공유할 수 있습니다.</p>' +
+      '<div class="univ-msg-box"><pre>' + esc(summaryText()) + '</pre></div>' +
+      '<div class="sheet-actions">' +
+      '<button style="color:#fff;background:#4B5AA3" data-action="copySummary">' + (state.copiedSummary ? '✓ 복사됨' : '복사하기 · Copy') + '</button>' +
+      '<button style="color:#4B5AA3;background:#EDEFF8" data-action="shareSummary">' + (state.sharedSummary ? '✓ 복사됨' : '공유하기 · Share') + '</button>' +
       '</div></div></div>'
     );
   }
@@ -873,25 +886,27 @@
   // PIN digit, every filter tap), not just on real screen/overlay
   // transitions. Track what was open on the previous render and only hand
   // out the animating class when something just opened.
-  var prevSnapshot = { screen: null, kakao: false, univmsg: false, editing: false, discard: false };
+  var prevSnapshot = { screen: null, kakao: false, univmsg: false, summaryPreview: false, editing: false, discard: false };
 
   function render() {
     var cur = {
       screen: state.screen,
       kakao: state.showKakaoHelp,
       univmsg: state.showUnivMsg,
+      summaryPreview: state.showSummaryPreview,
       editing: state.editIndex !== null,
       discard: state.showDiscard
     };
     var screenEnter = cur.screen !== prevSnapshot.screen ? 'screen-enter' : '';
     var kakaoEnter = cur.kakao && !prevSnapshot.kakao ? 'overlay-enter' : '';
     var univmsgEnter = cur.univmsg && !prevSnapshot.univmsg ? 'overlay-enter' : '';
+    var summaryPreviewEnter = cur.summaryPreview && !prevSnapshot.summaryPreview ? 'overlay-enter' : '';
     var editEnter = cur.editing && !prevSnapshot.editing ? 'overlay-enter' : '';
     var discardEnter = cur.discard && !prevSnapshot.discard ? 'discard-enter' : '';
 
     var body = (SCREEN_RENDERERS[state.screen] || renderWelcome)(screenEnter);
     var html = '<div class="app-shell">' + body + renderCornerLogo() +
-      renderKakaoHelp(kakaoEnter) + renderUnivMsg(univmsgEnter) + renderEditSheet(editEnter, discardEnter) +
+      renderKakaoHelp(kakaoEnter) + renderUnivMsg(univmsgEnter) + renderSummaryPreview(summaryPreviewEnter) + renderEditSheet(editEnter, discardEnter) +
       '</div>';
     app.innerHTML = html;
     prevSnapshot = cur;
@@ -940,6 +955,8 @@
     cancelDiscard: function () { update(function () { state.showDiscard = false; }); },
     openUnivMsg: function () { update(function () { state.showUnivMsg = true; }); },
     closeUnivMsg: function () { update(function () { state.showUnivMsg = false; }); },
+    openSummaryPreview: function () { update(function () { state.showSummaryPreview = true; }); },
+    closeSummaryPreview: function () { update(function () { state.showSummaryPreview = false; }); },
     copyUnivMsg: function () { copyText(univMessage(), 'copiedUnivMsg'); },
     shareUnivMsg: function () { shareText(univMessage(), 'sharedUnivMsg'); },
     copySummary: function () { copyText(summaryText(), 'copiedSummary'); },
@@ -952,6 +969,7 @@
       var kind = overlayEl.getAttribute('data-overlay');
       if (kind === 'kakao') return ACTIONS.closeKakaoHelp();
       if (kind === 'univmsg') return ACTIONS.closeUnivMsg();
+      if (kind === 'summarypreview') return ACTIONS.closeSummaryPreview();
       if (kind === 'edit') return ACTIONS.requestClose();
       if (kind === 'discard') return ACTIONS.cancelDiscard();
     }

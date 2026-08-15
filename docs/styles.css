@@ -217,12 +217,9 @@ input:focus, select:focus { border-color: var(--general); }
 
 .univ-msg-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; padding: 16px; font-size: 15px; font-weight: 700; color: #fff; background: var(--univ); border: none; border-radius: 14px; box-shadow: 0 12px 22px -14px rgba(224,123,44,.7); }
 .univ-msg-btn:hover { background: var(--univ-dark); }
-.summary-actions { display: flex; gap: 12px; margin-top: 12px; }
-.summary-actions button { flex: 1; padding: 16px; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; }
+.act-full { display: block; width: 100%; margin-top: 12px; padding: 16px; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; }
 .act-primary { color: #fff; background: var(--general); }
 .act-primary:hover { background: var(--general-dark); }
-.act-secondary { color: var(--general); background: var(--general-tint); }
-.act-secondary:hover { background: #E1E5F5; }
 
 /* ---------- Corner logo / team launcher ---------- */
 .corner-logo { position: absolute; top: 15px; right: 16px; height: 30px; z-index: 15; pointer-events: none; filter: drop-shadow(0 1px 3px rgba(0,0,0,.18)); }
