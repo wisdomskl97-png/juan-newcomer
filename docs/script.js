@@ -416,7 +416,10 @@
   }
 
   function startEdit(i) {
-    var p = state.today[i], info = p.info || {};
+    // realIndex (passed in as i) is computed from activeList() at render
+    // time, which is state.today OR the currently-picked archive week's
+    // people — never always state.today, now that 지난 기록 is editable too.
+    var p = activeList()[i], info = p.info || {};
     var draft = {
       row: p.row,
       name: p.name || '', year: p.year || '', flow: p.flow || 'general',
@@ -691,7 +694,7 @@
     var s = state;
     var showStats = s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
     var people = activeList();
-    var editable = s.viewMode === 'today';
+    var editable = showStats; // an actual people list is showing (today, or a picked archive week) — not the month/week picker itself
     var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
     var totalCount = people.length;
     var generalCount = people.filter(function (p) { return p.flow === 'general'; }).length;
