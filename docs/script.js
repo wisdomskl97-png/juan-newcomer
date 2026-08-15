@@ -104,9 +104,20 @@
     var id = active && active.id;
     var selStart = active && 'selectionStart' in active ? active.selectionStart : null;
     var selEnd = active && 'selectionEnd' in active ? active.selectionEnd : null;
+    // A full re-render tears down and rebuilds the DOM, so any scrollable
+    // overlay body (the edit sheet, kakao help, etc.) loses its scroll
+    // position and snaps back to the top — most noticeable when arming
+    // the delete confirmation scrolls the whole card back up on you.
+    // There's only ever one .sheet open at a time, so this is unambiguous.
+    var sheetEl = document.querySelector('.sheet');
+    var sheetScrollTop = sheetEl ? sheetEl.scrollTop : null;
     mutator();
     render();
     syncHistory();
+    if (sheetScrollTop != null) {
+      var newSheetEl = document.querySelector('.sheet');
+      if (newSheetEl) newSheetEl.scrollTop = sheetScrollTop;
+    }
     if (id) {
       var el = document.getElementById(id);
       if (el) {
