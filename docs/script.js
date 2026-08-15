@@ -486,7 +486,6 @@
       '<p class="sub">JOOAN NEW FAMILY REGISTRATION</p>' +
       '<div class="welcome-card"><p>시드니 주안교회에<br/>오신 것을 진심으로 환영합니다.</p>' +
       '<p>We are so glad you\'re here.<br/>등록은 1~2분이면 완료됩니다.</p></div>' +
-      '<div class="welcome-team-row"><button type="button" class="launcher" data-action="openSummary">팀원용 요약</button></div>' +
       '<div class="welcome-spacer"></div>' +
       '<button class="btn btn-primary-univ" data-action="goStart">시작하기 · Start</button>' +
       '</div>'
@@ -767,6 +766,10 @@
     if (state.screen === 'welcome' || state.screen === 'summary' || state.screen === 'pin') return '';
     return '<img class="corner-logo" src="image/juanlogo.png" alt="" />';
   }
+  function renderWelcomeTeam() {
+    if (state.screen !== 'welcome') return '';
+    return '<div class="welcome-team-corner"><button type="button" class="launcher" data-action="openSummary">팀원용 요약</button></div>';
+  }
 
   function renderKakaoHelp(enter) {
     if (!state.showKakaoHelp) return '';
@@ -905,7 +908,7 @@
     var discardEnter = cur.discard && !prevSnapshot.discard ? 'discard-enter' : '';
 
     var body = (SCREEN_RENDERERS[state.screen] || renderWelcome)(screenEnter);
-    var html = '<div class="app-shell">' + body + renderCornerLogo() +
+    var html = '<div class="app-shell">' + body + renderCornerLogo() + renderWelcomeTeam() +
       renderKakaoHelp(kakaoEnter) + renderUnivMsg(univmsgEnter) + renderSummaryPreview(summaryPreviewEnter) + renderEditSheet(editEnter, discardEnter) +
       '</div>';
     app.innerHTML = html;
