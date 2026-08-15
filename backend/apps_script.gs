@@ -59,7 +59,7 @@ function handleGetSummary() {
       name: name,
       year: yearFromDateCell(row[5]), // date_of_birth
       info: {
-        contact: row[3] || '',
+        contact: normalizePhone(row[3]),
         kakao: row[4] || '',
         birth: formatDateCell(row[5]),
         leader: row[6] || '',
@@ -91,6 +91,18 @@ function yearFromDateCell(v) {
   var s = formatDateCell(v);
   var m = s.match(/^(\d{4})/);
   return m ? m[1] : '';
+}
+
+// Sheets may have auto-converted a leading-zero AU mobile
+// number to a plain number, dropping the 0 (0412 345 678 ->
+// 412345678). AU mobiles are always 10 digits, so if all
+// we've got is 9 digits, the leading 0 was almost certainly
+// stripped — restore it. Only affects OLD rows; new rows are
+// written pre-formatted as text so this shouldn't recur.
+function normalizePhone(v) {
+  var s = String(v || '').trim();
+  if (/^\d{9}$/.test(s)) return '0' + s;
+  return s;
 }
 
 function doPost(e) {
@@ -133,8 +145,7 @@ function saveNewcomer(body, groupType) {
 
   var now = new Date();
   var registrationDate = todaySydney();
-
-  getSheet('Newcomers').appendRow([
+  var rowValues = [
     now,
     registrationDate,
     body.name || '',
@@ -152,7 +163,28 @@ function saveNewcomer(body, groupType) {
     '', // follow_up_status
     '', // assigned_member
     ''  // notes
-  ]);
+  ];
+
+  // appendRow() finds the next free row atomically; picking a row
+  // via getLastRow()+1 ourselves (needed so we can pre-format D/E as
+  // text before the value ever lands) reopens that race between two
+  // people submitting at nearly the same time, so guard it with a lock.
+  var sheet = getSheet('Newcomers');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var targetRow = sheet.getLastRow() + 1;
+    // Pre-format contact (D) and kakao (E) as plain text BEFORE
+    // writing — Sheets only auto-converts a numeric-looking string
+    // into a number (dropping a leading 0) if the cell isn't
+    // already text-formatted at write time. Fixing the format
+    // afterward can't undo an already-stripped 0.
+    sheet.getRange(targetRow, 4, 1, 2).setNumberFormat('@');
+    sheet.getRange(targetRow, 1, 1, rowValues.length)
+      .setValues([rowValues]);
+  } finally {
+    lock.releaseLock();
+  }
 
   appendDailySummary(
     registrationDate,
