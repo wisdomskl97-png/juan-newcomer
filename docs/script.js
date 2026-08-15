@@ -120,6 +120,7 @@
     state.screen = screen;
     render();
     syncHistory();
+    persistRegSession();
     requestAnimationFrame(function () { window.scrollTo(0, 0); });
   }
 
@@ -254,6 +255,35 @@
   function hadTeamSession() {
     try { return sessionStorage.getItem(TEAM_SESSION_KEY) === '1'; }
     catch (e) { return false; }
+  }
+
+  // Same idea for the registration flow: a refresh on 목장분류/새가족
+  // 등록/대학목장 shouldn't dump the new family member back to welcome
+  // and lose what they've already typed. Only screen + form fields are
+  // kept — nothing sensitive is added beyond what they're already
+  // mid-typing into the form.
+  var REG_SESSION_KEY = 'juanRegSession';
+  var REG_SCREENS = { question: true, formGeneral: true, formUniv: true };
+  function persistRegSession() {
+    try {
+      if (REG_SCREENS[state.screen]) {
+        sessionStorage.setItem(REG_SESSION_KEY, JSON.stringify({ screen: state.screen, form: state.form }));
+      } else {
+        sessionStorage.removeItem(REG_SESSION_KEY);
+      }
+    } catch (e) {}
+  }
+  function restoreRegSession() {
+    try {
+      var raw = sessionStorage.getItem(REG_SESSION_KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (!saved || !REG_SCREENS[saved.screen] || !saved.form) return;
+      var merged = emptyForm();
+      for (var k in saved.form) { if (merged.hasOwnProperty(k)) merged[k] = saved.form[k]; }
+      state.screen = saved.screen;
+      state.form = merged;
+    } catch (e) {}
   }
 
   function pinPress(d) {
@@ -958,6 +988,7 @@
       state.errors[field] = undefined;
       clearInlineError(context, field);
     }
+    if (context === 'form') persistRegSession();
   });
 
   // Selects have no IME composition concerns, and a change may need to
@@ -972,12 +1003,19 @@
       target[field] = t.value;
       if (context === 'form' && state.errors[field]) state.errors[field] = undefined;
     });
+    if (context === 'form') persistRegSession();
   });
 
   if (hadTeamSession()) {
     state.teamUnlocked = true;
     state.screen = 'summary';
+  } else {
+    restoreRegSession();
   }
   render();
+  // Arm the back-button trap immediately on a restored non-welcome
+  // screen, so a physical back press works even before any other
+  // interaction happens to trigger it.
+  syncHistory();
   if (state.screen === 'summary') loadSummaryData();
 })();
