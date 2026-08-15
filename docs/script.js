@@ -25,6 +25,8 @@
     pinInput: '',
     pinError: false,
     teamUnlocked: false,
+    summaryLoading: false,
+    summaryLoadError: '',
     form: emptyForm(),
     errors: {},
     today: [],
@@ -224,11 +226,54 @@
     if (next === String(CONFIG.teamPin)) {
       update(function () { state.teamUnlocked = true; state.pinInput = ''; state.pinError = false; });
       go('summary');
+      loadSummaryData();
     } else {
       update(function () { state.pinInput = ''; state.pinError = true; });
     }
   }
   function pinDel() { update(function () { state.pinInput = state.pinInput.slice(0, -1); state.pinError = false; }); }
+
+  function serviceSundayDateStr() {
+    var d = serviceSunday();
+    var mm = String(d.getMonth() + 1);
+    var dd = String(d.getDate());
+    if (mm.length < 2) mm = '0' + mm;
+    if (dd.length < 2) dd = '0' + dd;
+    return d.getFullYear() + '-' + mm + '-' + dd;
+  }
+
+  // Team summary is a read of DailySummary in Google Sheets, not of
+  // anything kept in the browser — state.today/state.archive only ever
+  // hold what THIS load fetched, so every entry into the summary screen
+  // re-fetches to stay current with what other devices have submitted.
+  function loadSummaryData() {
+    update(function () { state.summaryLoading = true; state.summaryLoadError = ''; });
+    var url = CONFIG.apiUrl + '?action=getSummary&pin=' + encodeURIComponent(CONFIG.teamPin);
+    fetch(url)
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (!result || !result.ok) throw new Error((result && result.error) || 'load failed');
+        var grouped = groupSummaryRecords(result.records || []);
+        update(function () { state.summaryLoading = false; state.today = grouped.today; state.archive = grouped.archive; });
+      })
+      .catch(function () {
+        update(function () { state.summaryLoading = false; state.summaryLoadError = '요약 데이터를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.'; });
+      });
+  }
+
+  function groupSummaryRecords(records) {
+    var todayStr = serviceSundayDateStr();
+    var todayList = [];
+    var byDate = {};
+    records.forEach(function (r) {
+      var person = { name: r.name, year: r.year || '', flow: r.group === '대학목장' ? 'univ' : 'general', info: {} };
+      if (r.date === todayStr) todayList.push(person);
+      if (!byDate[r.date]) byDate[r.date] = [];
+      byDate[r.date].push(person);
+    });
+    var archive = Object.keys(byDate).sort().reverse().map(function (d) { return { date: d, people: byDate[d] }; });
+    return { today: todayList, archive: archive };
+  }
 
   function activeList() {
     if (state.viewMode === 'today') return state.today;
@@ -567,6 +612,17 @@
 
     html += '<div class="summary-body">';
 
+    if (s.summaryLoading) {
+      html += '<div class="list-empty">불러오는 중… · Loading…</div></div></div>';
+      return html;
+    }
+    if (s.summaryLoadError) {
+      html += '<div class="list-empty">' + esc(s.summaryLoadError) + '</div>';
+      html += '<button class="back-chip" data-action="reloadSummary" style="margin-top:10px">다시 시도 · Retry</button>';
+      html += '</div></div>';
+      return html;
+    }
+
     if (s.viewMode === 'archive' && !s.archiveMonth) {
       var months = uniqueMonths();
       html += '<p class="picker-title">달을 선택하세요</p>';
@@ -781,10 +837,11 @@
     submitUniv: submitUniv,
     registerAgain: function () { update(function () { resetForm(); }); go('question'); },
     openSummary: function () {
-      if (state.teamUnlocked) { go('summary'); }
+      if (state.teamUnlocked) { go('summary'); loadSummaryData(); }
       else { update(function () { state.pinInput = ''; state.pinError = false; }); go('pin'); }
     },
     backToApp: function () { go('welcome'); },
+    reloadSummary: loadSummaryData,
     pinCancel: function () { update(function () { state.pinInput = ''; state.pinError = false; }); go('welcome'); },
     pinPress: function (el) { pinPress(el.getAttribute('data-value')); },
     pinDel: pinDel,

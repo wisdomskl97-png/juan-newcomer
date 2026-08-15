@@ -7,9 +7,44 @@
 
 var SPREADSHEET_ID = '1ddsa7WI80IDZT0YA1tSzhn1Ovw1NtLyuzHqAJK1uqwY';
 var TIMEZONE = 'Australia/Sydney';
+// Keep in sync with CONFIG.teamPin in docs/script.js — a soft gate, not
+// real security (DailySummary only ever holds name + birth year anyway).
+var TEAM_PIN = '0000';
 
 function doGet(e) {
+  var action = e.parameter && e.parameter.action;
+  if (action === 'getSummary') {
+    if (!e.parameter.pin || e.parameter.pin !== TEAM_PIN) return jsonResponse({ ok: false, error: 'unauthorized' });
+    return handleGetSummary();
+  }
   return jsonResponse({ ok: true, message: '주안 새가족등록 API is running' });
+}
+
+// 팀 요약 화면 조회: DailySummary 탭 전체를 읽어 이름+태어난해만 반환한다.
+function handleGetSummary() {
+  var sheet = getSheet('DailySummary');
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return jsonResponse({ ok: true, records: [] });
+
+  var values = sheet.getRange(2, 1, lastRow - 1, 4).getValues(); // registration_date, group_type, name, birth_year
+  var records = [];
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i];
+    var name = row[2];
+    if (!name) continue;
+    records.push({
+      date: formatDateCell(row[0]),
+      group: row[1] || '일반목장',
+      name: name,
+      year: row[3] ? String(row[3]) : ''
+    });
+  }
+  return jsonResponse({ ok: true, records: records });
+}
+
+function formatDateCell(v) {
+  if (v instanceof Date) return Utilities.formatDate(v, TIMEZONE, 'yyyy-MM-dd');
+  return String(v || '');
 }
 
 function doPost(e) {
