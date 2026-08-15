@@ -44,7 +44,8 @@
 
 ## 참고: 이 API가 하는 일
 
-- `action: "submitGeneral"` — 일반목장 새가족 전체 정보를 `Newcomers` 탭에 저장하고, `DailySummary` 탭에는 이름+태어난해만 추가로 기록합니다.
-- `action: "submitUnivSummary"` — 대학목장 새가족은 **이름과 생년월일만** 받아서 `DailySummary` 탭에 이름+태어난해만 기록합니다. 연락처·비자·전공 등 상세 정보는 이 API에 아예 보내지 않는 것이 원칙이라, 서버에는 처음부터 도달하지 않습니다 (확정 기획 "옵션 A" 그대로).
+- `action: "submitGeneral"` — 일반목장 새가족 전체 정보를 `Newcomers` 탭에 `group_type = 일반목장`으로 저장하고, `DailySummary` 탭에는 이름+태어난해만 추가로 기록합니다.
+- `action: "submitUniv"` — 대학목장 새가족도 전체 정보를 `Newcomers` 탭에 `group_type = 대학목장`으로 저장합니다 (2026-08-16 기준 변경: 원래 기획의 "옵션 A — 저장 없이 공유만"은 폐기하고, 팀 요약 화면에서 대학목장 등록자도 연락처·비자 등 상세정보를 볼 수 있도록 전체 저장하는 방식으로 바꿨습니다). `DailySummary`에도 이름+태어난해가 함께 기록됩니다.
+- `action: "getSummary"` (GET, `?action=getSummary&pin=...`) — 팀 요약 화면 조회용. `Newcomers` 전체를 읽어 일반/대학목장 모두 전체 정보를 반환합니다. `pin` 파라미터는 프론트엔드 `CONFIG.teamPin`과 동일해야 합니다 (소프트 게이트, 실제 보안은 아님).
 
 3단계(프론트엔드 연동)에서 이 URL을 `script.js`에 넣고 `fetch`로 호출하도록 코드를 수정할 예정입니다.

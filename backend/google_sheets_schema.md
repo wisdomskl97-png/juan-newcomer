@@ -10,11 +10,11 @@
 4. 탭을 하나 더 추가하고 이름을 **DailySummary**로 변경
 5. 각 탭의 1행(맨 위 줄)에 아래 헤더를 순서대로 붙여넣기 (첫 칸 A1부터)
 
-대학목장 정보는 옵션 A(저장 없이 공유만) 원칙에 따라 이 스프레드시트에 별도 탭을 만들지 않습니다.
+> **2026-08-16 업데이트**: 원래 "대학목장은 저장 없이 공유만"(옵션 A) 원칙이었으나, 팀 요약 화면에서 대학목장 등록자도 상세정보를 볼 수 있어야 한다는 결정에 따라 폐기했습니다. 이제 대학목장도 `Newcomers`에 `group_type = 대학목장`으로 전체 저장됩니다 — 아래 표는 일반/대학목장 공통입니다.
 
 ---
 
-## 탭 1: `Newcomers` (일반목장 등록자)
+## 탭 1: `Newcomers` (일반목장 + 대학목장 등록자, `group_type`으로 구분)
 
 | 열 | 헤더명 | 채우는 주체 | 타입 / 형식 | 설명 |
 |---|---|---|---|---|
@@ -30,7 +30,7 @@
 | J | baptism_status | 앱 | text | 세례 / 유아세례 / 미세례 / 모름 |
 | K | previous_church | 앱 | text | 이전 출석교회 (선택 입력) |
 | L | previous_activity | 앱 | text | 이전 봉사부서 (선택 입력) |
-| M | group_type | 자동 (Apps Script) | text | 항상 "일반목장" 고정값 |
+| M | group_type | 자동 (Apps Script) | text | "일반목장" 또는 "대학목장" |
 | N | registration_source | 자동 (Apps Script) | text | "QR" 고정값 (추후 팀원입력 구분 추가 가능) |
 | O | follow_up_status | **팀원이 수기 관리** | text (드롭다운) | 미연락 / 연락완료 / 목장연결 / 정착완료 |
 | P | assigned_member | **팀원이 수기 관리** | text | 담당자 이름 |
@@ -47,7 +47,9 @@ submitted_at	registration_date	name	contact	kakao_id	date_of_birth	introducer	vi
 
 ---
 
-## 탭 2: `DailySummary` (당일 요약, 일반+대학목장 공통 — 이름·태어난해만)
+## 탭 2: `DailySummary` (경량 보조 로그 — 이름·태어난해만)
+
+> 팀 요약 화면은 이제 `Newcomers`를 직접 읽어옵니다 (일반/대학목장 모두 전체 정보 포함). 이 탭은 화면 조회에는 더 이상 쓰이지 않고, 제출 시각마다 이름+태어난해만 별도로 남겨두는 가벼운 보조 로그로만 유지됩니다.
 
 | 열 | 헤더명 | 채우는 주체 | 타입 | 설명 |
 |---|---|---|---|---|

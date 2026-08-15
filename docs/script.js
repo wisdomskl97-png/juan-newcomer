@@ -186,9 +186,7 @@
     update(function () { state.submitting = true; state.submitError = ''; });
     var f = state.form;
     var effVisa = f.visa === '기타' && f.visaOther.trim() ? f.visaOther : f.visa;
-    // Only name + birth ever leave the browser for the university flow —
-    // contact/visa/major/etc. stay local for the share message only (옵션 A).
-    apiPost({ action: 'submitUnivSummary', name: f.name, birth: f.birth })
+    apiPost({ action: 'submitUniv', name: f.name, contact: f.contact, kakao: f.kakao, birth: f.birth, leader: f.leader, visa: effVisa, job: f.major, baptism: f.baptism, prevChurch: f.prevChurch, prevDept: f.prevDept })
       .then(function () {
         var info = { contact: f.contact, kakao: f.kakao, birth: f.birth, visa: effVisa, major: f.major, leader: f.leader, baptism: f.baptism, prevChurch: f.prevChurch, prevDept: f.prevDept };
         update(function () {
@@ -275,7 +273,7 @@
     var todayList = [];
     var byDate = {};
     records.forEach(function (r) {
-      var person = { name: r.name, year: r.year || '', flow: r.group === '대학목장' ? 'univ' : 'general', info: {} };
+      var person = { name: r.name, year: r.year || '', flow: r.group === '대학목장' ? 'univ' : 'general', info: r.info || {} };
       if (r.date === todayStr) todayList.push(person);
       if (!byDate[r.date]) byDate[r.date] = [];
       byDate[r.date].push(person);
