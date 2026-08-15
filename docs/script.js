@@ -233,8 +233,17 @@
   }
   function pinDel() { update(function () { state.pinInput = state.pinInput.slice(0, -1); state.pinError = false; }); }
 
-  function todayDateStr() {
+  // A registration filed any day this week (Mon–Sat) belongs to the
+  // upcoming Sunday's service, same as the backend files it under — so
+  // "오늘" here means "this week's Sunday", not literally today's date.
+  // On a Sunday itself the two are the same date anyway.
+  function currentServiceSunday() {
     var d = new Date();
+    d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
+    return d;
+  }
+  function todayDateStr() {
+    var d = currentServiceSunday();
     var mm = String(d.getMonth() + 1);
     var dd = String(d.getDate());
     if (mm.length < 2) mm = '0' + mm;
@@ -280,12 +289,8 @@
     var sess = state.archive.filter(function (x) { return x.date === state.archiveDate; })[0];
     return sess ? sess.people : [];
   }
-  // "오늘" means literally today's date, not the nearest Sunday — the team
-  // may open this on any day of the week (testing, following up midweek),
-  // and it must match whatever date the backend stamped on today's
-  // submissions.
   function todayLabel() {
-    var d = new Date();
+    var d = currentServiceSunday();
     return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
   }
   function activeDateLabel() {

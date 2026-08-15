@@ -183,10 +183,29 @@ function birthYear(birth) {
   return m ? Number(m[1]) : '';
 }
 
+// The date a registration is filed under: the upcoming (or
+// current, if today already is one) Sunday on Sydney's
+// calendar — not literally the day someone filled out the
+// form. A Thursday/Friday/Saturday registration belongs to
+// that week's Sunday service, same date the frontend groups
+// "오늘" under.
 function todaySydney() {
-  return Utilities.formatDate(
+  var sydneyYmd = Utilities.formatDate(
     new Date(), TIMEZONE, 'yyyy-MM-dd'
   );
+  var parts = sydneyYmd.split('-').map(Number);
+  // Pure calendar-date arithmetic on a UTC scratch Date, so
+  // this isn't affected by the script project's own default
+  // timezone or by DST — Sydney's Y/M/D already came from
+  // Utilities.formatDate above.
+  var d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+  var dow = d.getUTCDay(); // 0 = Sunday
+  d.setUTCDate(d.getUTCDate() + ((7 - dow) % 7));
+  var mm = String(d.getUTCMonth() + 1);
+  var dd = String(d.getUTCDate());
+  if (mm.length < 2) mm = '0' + mm;
+  if (dd.length < 2) dd = '0' + dd;
+  return d.getUTCFullYear() + '-' + mm + '-' + dd;
 }
 
 function getSheet(name) {
