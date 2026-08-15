@@ -105,6 +105,18 @@ function normalizePhone(v) {
   return s;
 }
 
+// A leading apostrophe is Sheets' own "treat this as text, don't
+// auto-convert it to a number/date" marker (the same thing typing
+// '0412345678 into a cell by hand does) — the apostrophe itself is
+// never stored, only its effect on how the value is interpreted.
+// Pre-setting the cell's number format didn't reliably stop the
+// auto-conversion, so use this instead for anything that must keep
+// a leading zero (phone numbers, some Kakao IDs).
+function forceText(v) {
+  var s = String(v || '');
+  return s ? "'" + s : '';
+}
+
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
@@ -145,12 +157,13 @@ function saveNewcomer(body, groupType) {
 
   var now = new Date();
   var registrationDate = todaySydney();
-  var rowValues = [
+
+  getSheet('Newcomers').appendRow([
     now,
     registrationDate,
     body.name || '',
-    body.contact || '',
-    body.kakao || '',
+    forceText(body.contact),
+    forceText(body.kakao),
     body.birth || '',
     body.leader || '',
     body.visa || '',
@@ -163,28 +176,7 @@ function saveNewcomer(body, groupType) {
     '', // follow_up_status
     '', // assigned_member
     ''  // notes
-  ];
-
-  // appendRow() finds the next free row atomically; picking a row
-  // via getLastRow()+1 ourselves (needed so we can pre-format D/E as
-  // text before the value ever lands) reopens that race between two
-  // people submitting at nearly the same time, so guard it with a lock.
-  var sheet = getSheet('Newcomers');
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var targetRow = sheet.getLastRow() + 1;
-    // Pre-format contact (D) and kakao (E) as plain text BEFORE
-    // writing — Sheets only auto-converts a numeric-looking string
-    // into a number (dropping a leading 0) if the cell isn't
-    // already text-formatted at write time. Fixing the format
-    // afterward can't undo an already-stripped 0.
-    sheet.getRange(targetRow, 4, 1, 2).setNumberFormat('@');
-    sheet.getRange(targetRow, 1, 1, rowValues.length)
-      .setValues([rowValues]);
-  } finally {
-    lock.releaseLock();
-  }
+  ]);
 
   appendDailySummary(
     registrationDate,
