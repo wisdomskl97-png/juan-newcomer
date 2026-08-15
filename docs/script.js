@@ -39,11 +39,25 @@
   }
 
   var app = document.getElementById('app');
-  var overlayOpen = false, fromPop = false, ignorePop = false;
+
+  // Phone "back" (gesture or hardware button) must feel like it's inside
+  // the app, not like leaving it. We keep exactly ONE extra history entry
+  // ("trap") pushed whenever there's anything to back out of — an open
+  // overlay, or any screen other than the welcome/home screen. One back
+  // press is caught by popstate, we close the topmost overlay or step to
+  // the previous screen ourselves, then re-arm a fresh trap. Once back at
+  // welcome with nothing open, we stop re-arming and a further back press
+  // is a real exit. selfTriggeredBack guards the history.back() we issue
+  // ourselves (e.g. tapping an in-app "홈으로" button) so that synthetic
+  // popstate doesn't get reprocessed as if the user pressed back.
+  var trapArmed = false;
+  var selfTriggeredBack = false;
 
   window.addEventListener('popstate', function () {
-    if (overlayOpen) { fromPop = true; closeTopOverlay(); }
-    else if (ignorePop) { ignorePop = false; }
+    if (selfTriggeredBack) { selfTriggeredBack = false; return; }
+    trapArmed = false;
+    if (anyOverlay()) { closeTopOverlay(); }
+    else if (state.screen !== 'welcome') { smartBack(); }
   });
 
   function anyOverlay() {
@@ -56,12 +70,28 @@
     if (state.showUnivMsg) return update(function () { state.showUnivMsg = false; });
     if (state.editIndex !== null) return requestClose();
   }
+  // Mirrors what each screen's own "Back"/"Home" button already does.
+  function smartBack() {
+    switch (state.screen) {
+      case 'question':
+        resetForm(); go('welcome'); break;
+      case 'formGeneral':
+      case 'formUniv':
+        state.errors = {}; state.submitError = ''; go('question'); break;
+      case 'completeGeneral':
+      case 'completeUniv':
+        resetForm(); go('welcome'); break;
+      case 'pin':
+        state.pinInput = ''; state.pinError = false; go('welcome'); break;
+      default:
+        go('welcome');
+    }
+  }
   function syncHistory() {
-    var open = anyOverlay();
+    var wantsTrap = anyOverlay() || state.screen !== 'welcome';
     try {
-      if (open && !overlayOpen) { overlayOpen = true; if (!fromPop) history.pushState({ m: 1 }, ''); fromPop = false; }
-      else if (open && overlayOpen) { if (fromPop) { history.pushState({ m: 1 }, ''); fromPop = false; } }
-      else if (!open && overlayOpen) { overlayOpen = false; if (!fromPop) { ignorePop = true; history.back(); } fromPop = false; }
+      if (wantsTrap && !trapArmed) { trapArmed = true; history.pushState({ trap: true }, ''); }
+      else if (!wantsTrap && trapArmed) { trapArmed = false; selfTriggeredBack = true; history.back(); }
     } catch (e) {}
   }
 
