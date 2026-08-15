@@ -233,8 +233,8 @@
   }
   function pinDel() { update(function () { state.pinInput = state.pinInput.slice(0, -1); state.pinError = false; }); }
 
-  function serviceSundayDateStr() {
-    var d = serviceSunday();
+  function todayDateStr() {
+    var d = new Date();
     var mm = String(d.getMonth() + 1);
     var dd = String(d.getDate());
     if (mm.length < 2) mm = '0' + mm;
@@ -262,7 +262,7 @@
   }
 
   function groupSummaryRecords(records) {
-    var todayStr = serviceSundayDateStr();
+    var todayStr = todayDateStr();
     var todayList = [];
     var byDate = {};
     records.forEach(function (r) {
@@ -280,17 +280,16 @@
     var sess = state.archive.filter(function (x) { return x.date === state.archiveDate; })[0];
     return sess ? sess.people : [];
   }
-  function serviceSunday() {
+  // "오늘" means literally today's date, not the nearest Sunday — the team
+  // may open this on any day of the week (testing, following up midweek),
+  // and it must match whatever date the backend stamped on today's
+  // submissions.
+  function todayLabel() {
     var d = new Date();
-    d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
-    return d;
-  }
-  function serviceSundayLabel() {
-    var d = serviceSunday();
     return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
   }
   function activeDateLabel() {
-    if (state.viewMode === 'today') return serviceSundayLabel();
+    if (state.viewMode === 'today') return todayLabel();
     if (!state.archiveDate) return '';
     var parts = state.archiveDate.split('-').map(Number);
     return parts[0] + '년 ' + parts[1] + '월 ' + parts[2] + '일';
@@ -322,7 +321,7 @@
     var t = state.today;
     var g = t.filter(function (p) { return p.flow === 'general'; }).length;
     var u = t.filter(function (p) { return p.flow === 'univ'; }).length;
-    var s = '[주안교회 오늘 새가족 등록]\n' + serviceSundayLabel() + '\n총 ' + t.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n\n';
+    var s = '[주안교회 오늘 새가족 등록]\n' + todayLabel() + '\n총 ' + t.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n\n';
     t.forEach(function (p, i) { s += (i + 1) + '. ' + p.name + ' (' + (p.year || '—') + ') · ' + (p.flow === 'univ' ? '대학목장' : '일반목장') + '\n'; });
     return s;
   }
