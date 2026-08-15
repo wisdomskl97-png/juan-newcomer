@@ -668,7 +668,7 @@
     html += '<div class="summary-head">';
     html += '<div class="summary-head-row"><span class="label">팀원용 · TEAM ONLY</span><div style="display:flex;gap:8px">' +
       '<button class="btn-pill" style="background:rgba(255,255,255,.1);color:#B7BBCB" data-action="reloadSummary" title="새로고침 · Refresh"' + (s.summaryLoading ? ' disabled' : '') + '>' + (s.summaryLoading ? '⟳' : '↻') + ' 새로고침</button>' +
-      '<button class="btn-pill" style="background:rgba(255,255,255,.1);color:#B7BBCB" data-action="backToApp">← 앱으로</button>' +
+      '<button class="btn-pill" data-action="backToApp">🏠 홈으로</button>' +
       '</div></div>';
     html += '<div class="summary-tabs">';
     html += '<button class="summary-tab ' + (s.viewMode === 'today' ? 'active' : '') + '" data-action="setViewToday">오늘</button>';
