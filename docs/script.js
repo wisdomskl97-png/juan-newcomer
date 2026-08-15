@@ -125,11 +125,33 @@
 
   function resetForm() { state.form = emptyForm(); state.errors = {}; state.submitError = ''; }
 
+  // As the user types digits into the birth field, insert dashes at the
+  // yyyy-MM-dd positions automatically (19950101 -> 1995-01-01) so they
+  // never have to type the dashes themselves or touch a calendar picker.
+  function digitsToYmd(raw) {
+    var digits = String(raw || '').replace(/\D/g, '').slice(0, 8);
+    var y = digits.slice(0, 4), m = digits.slice(4, 6), d = digits.slice(6, 8);
+    var out = y;
+    if (m) out += '-' + m;
+    if (d) out += '-' + d;
+    return out;
+  }
+  function isValidYmd(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return false;
+    var y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+    if (mo < 1 || mo > 12) return false;
+    var daysInMonth = new Date(y, mo, 0).getDate();
+    return d >= 1 && d <= daysInMonth;
+  }
+  var BIRTH_FORMAT_MSG = '생년월일 형식을 확인해주세요 (예: 1995-01-01) / Please check the date format (e.g. 1995-01-01)';
+
   function validateGeneral() {
     var f = state.form, er = {};
     if (!f.name.trim()) er.name = '이름을 입력해주세요 / Please enter your name';
     if (!f.contact.trim()) er.contact = '연락처를 입력해주세요 / Please enter your contact';
     if (!f.birth) er.birth = '생년월일을 입력해주세요 / Please enter your birth date';
+    else if (!isValidYmd(f.birth)) er.birth = BIRTH_FORMAT_MSG;
     if (!f.visa) er.visa = '비자 종류를 선택해주세요 / Please select a visa type';
     if (f.visa === '기타' && !f.visaOther.trim()) er.visaOther = '비자 종류를 입력해주세요 / Please enter your visa type';
     return er;
@@ -139,6 +161,7 @@
     if (!f.name.trim()) er.name = '이름을 입력해주세요 / Please enter your name';
     if (!f.contact.trim()) er.contact = '연락처를 입력해주세요 / Please enter your contact';
     if (!f.birth) er.birth = '생년월일을 입력해주세요 / Please enter your birth date';
+    else if (!isValidYmd(f.birth)) er.birth = BIRTH_FORMAT_MSG;
     return er;
   }
 
@@ -502,9 +525,8 @@
       fieldHtml({ context: 'form', field: 'name', label: '이름 / Name', required: true, value: f.name, placeholder: '예) 홍길동 / Gil-dong Hong', error: er.name }) +
       fieldHtml({ context: 'form', field: 'contact', label: '연락처 / Contact', required: true, value: f.contact, placeholder: '예) 0400 000 000', inputMode: 'tel', error: er.contact }) +
       '<div class="field-row">' + kakaoLabelRow('form') +
-      '<div class="field"><label>생년월일 / Birth <span class="req">*</span></label><input id="form-birth" type="date" data-context="form" data-field="birth" value="' + esc(f.birth) + '" /></div>' +
+      fieldHtml({ context: 'form', field: 'birth', label: '생년월일 / Birth', required: true, value: f.birth, type: 'text', inputMode: 'numeric', placeholder: 'YYYY-MM-DD', error: er.birth }) +
       '</div>' +
-      (er.birth ? '<div class="error-msg" id="err-form-birth" style="margin:-8px 0 16px">' + '<span class="error-dot">!</span>' + esc(er.birth) + '</div>' : '') +
       fieldHtml({ context: 'form', field: 'leader', label: '인도자 / Invited by', required: false, value: f.leader, placeholder: '나를 초대한 분' }) +
       '<div class="section-head"><span class="section-bar"></span><h3>교회 관련 · Church</h3></div>' +
       selectHtml({ context: 'form', field: 'baptism', label: '세례 여부 / Baptism', required: false, value: f.baptism, options: BAPTISM_OPTIONS }) +
@@ -534,9 +556,8 @@
       fieldHtml({ context: 'form', field: 'name', label: '이름 / Name', required: true, value: f.name, placeholder: '예) 홍길동', error: er.name }) +
       fieldHtml({ context: 'form', field: 'contact', label: '연락처 / Contact', required: true, value: f.contact, placeholder: '예) 0400 000 000', inputMode: 'tel', error: er.contact }) +
       '<div class="field-row">' + kakaoLabelRow('form') +
-      '<div class="field"><label>생년월일 / Birth <span class="req">*</span></label><input id="form-birth" type="date" data-context="form" data-field="birth" value="' + esc(f.birth) + '" /></div>' +
+      fieldHtml({ context: 'form', field: 'birth', label: '생년월일 / Birth', required: true, value: f.birth, type: 'text', inputMode: 'numeric', placeholder: 'YYYY-MM-DD', error: er.birth }) +
       '</div>' +
-      (er.birth ? '<div class="error-msg" id="err-form-birth" style="margin:-8px 0 16px">' + '<span class="error-dot">!</span>' + esc(er.birth) + '</div>' : '') +
       selectHtml({ context: 'form', field: 'visa', label: '비자 종류 / Visa', required: false, value: f.visa, options: VISA_OPTIONS_UNIV }) +
       (f.visa === '기타' ? fieldHtml({ context: 'form', field: 'visaOther', noLabel: true, value: f.visaOther, placeholder: '비자 종류를 직접 입력 / Enter visa type' }) : '') +
       fieldHtml({ context: 'form', field: 'major', label: '전공 / Major', required: false, value: f.major, placeholder: '예) 회계학, IT' }) +
@@ -770,7 +791,7 @@
     html += ef('contact', '연락처 / Contact', 'tel');
     html += '<div class="field-row">';
     html += '<div class="edit-field" style="flex:1"><label class="edit-label">카카오톡 ID</label><input id="editDraft-kakao" type="text" data-context="editDraft" data-field="kakao" value="' + esc(d.kakao) + '" /></div>';
-    html += '<div class="edit-field" style="flex:1"><label class="edit-label">생년월일</label><input id="editDraft-birth" type="date" data-context="editDraft" data-field="birth" value="' + esc(d.birth) + '" /></div>';
+    html += '<div class="edit-field" style="flex:1"><label class="edit-label">생년월일</label><input id="editDraft-birth" type="text" inputMode="numeric" placeholder="YYYY-MM-DD" data-context="editDraft" data-field="birth" value="' + esc(d.birth) + '" /></div>';
     html += '</div>';
     html += '<div class="field-row">';
     html += '<div class="edit-field" style="flex:1"><label class="edit-label">비자 종류</label><input id="editDraft-visa" type="text" data-context="editDraft" data-field="visa" value="' + esc(d.visa) + '" /></div>';
@@ -926,8 +947,13 @@
     if (!t.hasAttribute || !t.hasAttribute('data-field') || t.tagName === 'SELECT') return;
     var context = t.getAttribute('data-context');
     var field = t.getAttribute('data-field');
+    var value = t.value;
+    if (field === 'birth') {
+      value = digitsToYmd(value);
+      if (t.value !== value) t.value = value;
+    }
     var target = context === 'editDraft' ? state.editDraft : state.form;
-    target[field] = t.value;
+    target[field] = value;
     if (context === 'form' && state.errors[field]) {
       state.errors[field] = undefined;
       clearInlineError(context, field);
