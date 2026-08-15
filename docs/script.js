@@ -394,10 +394,10 @@
     return s;
   }
   function summaryText() {
-    var t = state.today;
+    var t = activeList();
     var g = t.filter(function (p) { return p.flow === 'general'; }).length;
     var u = t.filter(function (p) { return p.flow === 'univ'; }).length;
-    var s = '[주안교회 오늘 새가족 등록]\n' + todayLabel() + '\n총 ' + t.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n\n';
+    var s = '[주안교회 새가족 등록 요약]\n' + activeDateLabel() + '\n총 ' + t.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n\n';
     t.forEach(function (p, i) { s += (i + 1) + '. ' + p.name + ' (' + (p.year || '—') + ') · ' + (p.flow === 'univ' ? '대학목장' : '일반목장') + '\n'; });
     return s;
   }
@@ -745,7 +745,7 @@
       if (hasUnivToday) {
         html += '<button class="univ-msg-btn" data-action="openUnivMsg">🎓 대학목장 전달 메시지 만들기</button>';
       }
-      html += '<button class="act-primary act-full" data-action="openSummaryPreview">오늘 등록 요약 보기</button>';
+      html += '<button class="act-primary act-full" data-action="openSummaryPreview">' + (s.viewMode === 'today' ? '오늘 등록 요약 보기' : '등록 요약 보기') + '</button>';
     }
 
     html += '</div></div>';
@@ -801,7 +801,7 @@
     if (!state.showSummaryPreview) return '';
     return (
       '<div class="overlay ' + enter + '" data-overlay="summarypreview"><div class="sheet">' +
-      '<div class="sheet-head"><h3>오늘 등록 요약</h3><button class="btn-pill" data-action="closeSummaryPreview">닫기</button></div>' +
+      '<div class="sheet-head"><h3>' + (state.viewMode === 'today' ? '오늘 등록 요약' : '등록 요약') + '</h3><button class="btn-pill" data-action="closeSummaryPreview">닫기</button></div>' +
       '<p class="sheet-sub">아래 내용을 복사하거나 바로 공유할 수 있습니다.</p>' +
       '<div class="univ-msg-box"><pre>' + esc(summaryText()) + '</pre></div>' +
       '<div class="sheet-actions">' +
