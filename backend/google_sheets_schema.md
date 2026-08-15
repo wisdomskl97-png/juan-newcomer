@@ -35,12 +35,15 @@
 | O | follow_up_status | **팀원이 수기 관리** | text (드롭다운) | 미연락 / 연락완료 / 목장연결 / 정착완료 |
 | P | assigned_member | **팀원이 수기 관리** | text | 담당자 이름 |
 | Q | notes | **팀원이 수기 관리** | text | 메모 |
+| R | deleted_at | 자동 (Apps Script) | datetime | 비어있으면 정상, 값이 있으면 삭제된 것 (소프트 삭제) |
 
 **1행에 그대로 붙여넣을 헤더 (탭으로 구분됨, A1부터):**
 
 ```
-submitted_at	registration_date	name	contact	kakao_id	date_of_birth	introducer	visa_type	job_or_major	baptism_status	previous_church	previous_activity	group_type	registration_source	follow_up_status	assigned_member	notes
+submitted_at	registration_date	name	contact	kakao_id	date_of_birth	introducer	visa_type	job_or_major	baptism_status	previous_church	previous_activity	group_type	registration_source	follow_up_status	assigned_member	notes	deleted_at
 ```
+
+> **2026-08-17 추가**: 팀 요약 화면에서 "이 등록 삭제하기"를 눌러도 실제로 행이 지워지지 않고 로컬 화면에서만 사라졌다가 새로고침하면 다시 나타나는 문제가 있었습니다. 이제 R열(`deleted_at`)에 삭제 시각을 기록하는 소프트 삭제 방식으로 실제 시트에 반영됩니다. **기존 시트에 R열이 없다면 위 헤더 줄의 `deleted_at`을 R1 셀에 직접 추가해주세요.** 실수로 삭제된 경우, R열의 값을 지우면 앱에 다시 나타납니다 (복구).
 
 **O열(follow_up_status) 드롭다운 설정** (선택이지만 추천):
 데이터 → 데이터 확인 → 범위: O2:O1000 → 조건: 항목 목록 → `미연락,연락완료,목장연결,정착완료`

@@ -23,6 +23,8 @@
     editOriginal: '',
     showDiscard: false,
     editDeleteArm: false,
+    editSaving: false,
+    editSaveError: '',
     pinInput: '',
     pinError: false,
     teamUnlocked: false,
@@ -357,7 +359,7 @@
     var todayList = [];
     var byDate = {};
     records.forEach(function (r) {
-      var person = { name: r.name, year: r.year || '', flow: r.group === '대학목장' ? 'univ' : 'general', info: r.info || {} };
+      var person = { name: r.name, year: r.year || '', flow: r.group === '대학목장' ? 'univ' : 'general', info: r.info || {}, row: r.row };
       if (r.date === todayStr) todayList.push(person);
       if (!byDate[r.date]) byDate[r.date] = [];
       byDate[r.date].push(person);
@@ -416,32 +418,52 @@
   function startEdit(i) {
     var p = state.today[i], info = p.info || {};
     var draft = {
+      row: p.row,
       name: p.name || '', year: p.year || '', flow: p.flow || 'general',
       contact: info.contact || '', kakao: info.kakao || '', birth: info.birth || '', visa: info.visa || '',
       major: info.major || '', leader: info.leader || '', baptism: info.baptism || '', prevChurch: info.prevChurch || '', prevDept: info.prevDept || ''
     };
     update(function () {
       state.editIndex = i; state.editDraft = draft; state.editOriginal = JSON.stringify(draft);
-      state.showDiscard = false; state.editDeleteArm = false;
+      state.showDiscard = false; state.editDeleteArm = false; state.editSaving = false; state.editSaveError = '';
     });
   }
   function requestClose() {
+    if (state.editSaving) return; // don't let the sheet close out from under an in-flight save/delete
     if (JSON.stringify(state.editDraft) !== state.editOriginal) update(function () { state.showDiscard = true; });
     else update(function () { state.editIndex = null; state.editDeleteArm = false; });
   }
+  // Both save and delete write straight to the sheet — Newcomers is the
+  // only place this data lives, so a purely local edit would just look
+  // reverted the next time the summary reloads (which is exactly the bug
+  // this replaced: deletes "coming back" after a refresh because they'd
+  // never actually left the sheet).
   function saveEdit() {
-    var d = state.editDraft, i = state.editIndex;
-    if (i == null) return;
-    var item = { name: d.name, year: d.year, flow: d.flow, info: { contact: d.contact, kakao: d.kakao, birth: d.birth, visa: d.visa, major: d.major, leader: d.leader, baptism: d.baptism, prevChurch: d.prevChurch, prevDept: d.prevDept } };
-    update(function () {
-      state.today[i] = item; state.editIndex = null; state.editDeleteArm = false; state.showDiscard = false;
+    var d = state.editDraft;
+    if (!d.row) return;
+    update(function () { state.editSaving = true; state.editSaveError = ''; });
+    apiPost({
+      action: 'updateRegistrant', row: d.row,
+      name: d.name, contact: d.contact, kakao: d.kakao, birth: d.birth,
+      leader: d.leader, visa: d.visa, job: d.major, baptism: d.baptism,
+      prevChurch: d.prevChurch, prevDept: d.prevDept,
+      group: d.flow === 'univ' ? '대학목장' : '일반목장'
+    }).then(function () {
+      update(function () { state.editIndex = null; state.editDeleteArm = false; state.showDiscard = false; state.editSaving = false; });
+      loadSummaryData();
+    }).catch(function () {
+      update(function () { state.editSaving = false; state.editSaveError = '저장에 실패했습니다. 다시 시도해주세요.'; });
     });
   }
   function deleteCurrent() {
-    var i = state.editIndex;
-    update(function () {
-      state.today = state.today.filter(function (_, j) { return j !== i; });
-      state.editIndex = null; state.editDeleteArm = false; state.showDiscard = false;
+    var d = state.editDraft;
+    if (!d.row) return;
+    update(function () { state.editSaving = true; state.editSaveError = ''; });
+    apiPost({ action: 'deleteRegistrant', row: d.row }).then(function () {
+      update(function () { state.editIndex = null; state.editDeleteArm = false; state.showDiscard = false; state.editSaving = false; });
+      loadSummaryData();
+    }).catch(function () {
+      update(function () { state.editSaving = false; state.editSaveError = '삭제에 실패했습니다. 다시 시도해주세요.'; });
     });
   }
 
@@ -861,15 +883,18 @@
     html += ef('prevChurch', '이전 출석교회');
     html += ef('prevDept', '이전 봉사부서');
 
-    html += '<button class="save-btn" data-action="saveEdit">저장하기 · Save</button>';
+    if (state.editSaveError) {
+      html += '<div class="error-msg" style="margin-top:14px"><span class="error-dot">!</span>' + esc(state.editSaveError) + '</div>';
+    }
+    html += '<button class="save-btn" data-action="saveEdit"' + (state.editSaving ? ' disabled' : '') + '>' + (state.editSaving ? '저장 중… · Saving' : '저장하기 · Save') + '</button>';
 
     html += '<div class="delete-zone">';
     if (!state.editDeleteArm) {
-      html += '<button class="delete-idle-btn" data-action="armDelete">🗑 이 등록 삭제하기</button>';
+      html += '<button class="delete-idle-btn" data-action="armDelete"' + (state.editSaving ? ' disabled' : '') + '>🗑 이 등록 삭제하기</button>';
     } else {
-      html += '<div class="delete-confirm"><p>이 등록을 삭제할까요? 되돌릴 수 없습니다.</p><div class="delete-confirm-row">' +
-        '<button class="delete-confirm-yes" data-action="deleteCurrent">삭제</button>' +
-        '<button class="delete-confirm-no" data-action="disarmDelete">취소</button></div></div>';
+      html += '<div class="delete-confirm"><p>이 등록을 삭제할까요? 앱에서는 되돌릴 수 없습니다.</p><div class="delete-confirm-row">' +
+        '<button class="delete-confirm-yes" data-action="deleteCurrent"' + (state.editSaving ? ' disabled' : '') + '>' + (state.editSaving ? '삭제 중…' : '삭제') + '</button>' +
+        '<button class="delete-confirm-no" data-action="disarmDelete"' + (state.editSaving ? ' disabled' : '') + '>취소</button></div></div>';
     }
     html += '</div>';
 

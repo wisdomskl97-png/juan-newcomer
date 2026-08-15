@@ -37,6 +37,7 @@ function doGet(e) {
 
 // 팀 요약 화면 조회: Newcomers 전체를 읽어 그룹별로
 // 반환한다 (일반목장/대학목장 모두 전체 정보 포함).
+// 소프트 삭제된(deleted_at 있는) 행은 제외한다.
 function handleGetSummary() {
   var sheet = getSheet('Newcomers');
   var lastRow = sheet.getLastRow();
@@ -45,7 +46,7 @@ function handleGetSummary() {
   }
 
   var numRows = lastRow - 1;
-  var range = sheet.getRange(2, 1, numRows, 17);
+  var range = sheet.getRange(2, 1, numRows, 18);
   var values = range.getValues();
 
   var records = [];
@@ -53,7 +54,9 @@ function handleGetSummary() {
     var row = values[i];
     var name = row[2];
     if (!name) continue;
+    if (row[17]) continue; // deleted_at set -> soft-deleted, hide it
     records.push({
+      row: i + 2, // actual sheet row number, needed to edit/delete later
       date: formatDateCell(row[1]), // registration_date
       group: row[12] || '일반목장', // group_type
       name: name,
@@ -126,6 +129,12 @@ function doPost(e) {
     if (body.action === 'submitUniv') {
       return saveNewcomer(body, '대학목장');
     }
+    if (body.action === 'updateRegistrant') {
+      return updateRegistrant(body);
+    }
+    if (body.action === 'deleteRegistrant') {
+      return deleteRegistrant(body);
+    }
     return jsonResponse({
       ok: false,
       error: 'unknown action: ' + body.action
@@ -185,6 +194,58 @@ function saveNewcomer(body, groupType) {
     birthYear(body.birth)
   );
   return jsonResponse({ ok: true });
+}
+
+// 팀 요약 화면의 수정 카드에서 저장하기: 해당 행(C~M열, 이름부터
+// 목장구분까지)만 덮어쓴다. submitted_at/registration_date 같은
+// 자동 기록 항목과 follow_up_status/담당자/메모는 건드리지 않는다.
+function updateRegistrant(body) {
+  var sheet = getSheet('Newcomers');
+  var row = Number(body.row);
+  var check = checkEditableRow(sheet, row);
+  if (check) return check;
+
+  if (!body.name || !String(body.name).trim()) {
+    return jsonResponse({ ok: false, error: 'name is required' });
+  }
+  if (!body.contact || !String(body.contact).trim()) {
+    return jsonResponse({ ok: false, error: 'contact is required' });
+  }
+
+  sheet.getRange(row, 3, 1, 11).setValues([[
+    body.name || '',
+    forceText(body.contact),
+    forceText(body.kakao),
+    body.birth || '',
+    body.leader || '',
+    body.visa || '',
+    body.job || '',
+    body.baptism || '',
+    body.prevChurch || '',
+    body.prevDept || '',
+    body.group || '일반목장'
+  ]]);
+  return jsonResponse({ ok: true });
+}
+
+// 소프트 삭제: 행을 실제로 지우지 않고 deleted_at(R열)에 시각만
+// 기록한다. 팀 요약 조회에서는 이 값이 있으면 걸러진다. 실수로
+// 지웠다면 시트에서 R열 값을 지우면 그대로 복구된다.
+function deleteRegistrant(body) {
+  var sheet = getSheet('Newcomers');
+  var row = Number(body.row);
+  var check = checkEditableRow(sheet, row);
+  if (check) return check;
+
+  sheet.getRange(row, 18).setValue(new Date());
+  return jsonResponse({ ok: true });
+}
+
+function checkEditableRow(sheet, row) {
+  if (!row || row < 2 || row > sheet.getLastRow()) {
+    return jsonResponse({ ok: false, error: 'invalid row' });
+  }
+  return null;
 }
 
 function appendDailySummary(
