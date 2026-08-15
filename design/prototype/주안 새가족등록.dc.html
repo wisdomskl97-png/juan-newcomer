@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family:'Pretendard','Pretendard Variable',-apple-system,sans-serif; background:#EDEBE6; }
+  input, select, button, textarea { font-family:inherit; }
+  @keyframes scEnter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes scPop { 0% { opacity:0; transform:scale(.8); } 60% { transform:scale(1.06); } 100% { opacity:1; transform:scale(1); } }
+  @keyframes scSpin { to { transform:rotate(360deg); } }
+  .scScreen::-webkit-scrollbar { width:0; }
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:32px 16px;box-sizing:border-box;background:radial-gradient(circle at 50% 0%,#F3F1EC,#E7E4DD)">
+
+  <div style="width:390px;max-width:100%;height:812px;max-height:calc(100vh - 120px);background:#FAFAF8;border-radius:38px;box-shadow:0 30px 70px -20px rgba(50,46,80,.45),0 0 0 10px #1c1b22,0 0 0 11px #34333c;overflow:hidden;position:relative;display:flex;flex-direction:column">
+
+    <div class="scScreen" style="flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch">
+
+      <!-- 1. WELCOME -->
+      <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ true }}">
+        <div style="animation:scEnter .3s ease;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:52px 30px 40px;text-align:center">
+          <img src="image/juanlogo.png" alt="Sydney Jooan Church" style="width:216px;max-width:78%;margin:0 auto 34px;display:block" />
+          <h1 style="margin:0 0 4px;font-size:30px;font-weight:800;color:#2C3040;letter-spacing:-.02em">주안 새가족등록</h1>
+          <p style="margin:0 0 26px;font-size:14px;font-weight:600;color:#8A8FA0;letter-spacing:.04em">JOOAN NEW FAMILY REGISTRATION</p>
+          <div style="background:#fff;border:1px solid #ECEAE4;border-radius:20px;padding:24px 22px;box-shadow:0 8px 24px -16px rgba(50,46,80,.3)">
+            <p style="margin:0 0 8px;font-size:18px;line-height:1.55;color:#3A3F52;font-weight:600;text-wrap:pretty">시드니 주안교회에<br/>오신 것을 진심으로 환영합니다.</p>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#8A8FA0;text-wrap:pretty">We are so glad you're here.<br/>등록은 1~2분이면 완료됩니다.</p>
+          </div>
+          <div style="flex:1;min-height:24px"></div>
+          <button onClick="{{ goStart }}" style="width:100%;padding:18px;font-size:18px;font-weight:700;color:#fff;background:#E07B2C;border:none;border-radius:16px;cursor:pointer;box-shadow:0 12px 22px -10px rgba(224,123,44,.7);transition:background .18s,transform .1s" style-hover="background:#CC6A1E" style-active="transform:scale(.98)">시작하기 · Start</button>
+        </div>
+      </sc-if>
+
+      <!-- 2. QUESTION -->
+      <sc-if value="{{ isQuestion }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:32px 26px 36px;background:linear-gradient(180deg,#FDF6EC 0%,#FAF3EF 42%,#FAFAF8 100%)">
+          <button onClick="{{ goHome }}" style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;padding:8px 13px;font-size:13px;font-weight:700;color:#B0722E;background:#FBEEDF;border:none;border-radius:20px;cursor:pointer;transition:background .16s" style-hover="background:#F6E2CC">🏠 홈으로</button>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:26px">
+            <div style="height:7px;flex:1;border-radius:4px;background:linear-gradient(90deg,#F2C230,#E07B2C,#E24B8A)"></div>
+            <div style="flex:1;height:7px;border-radius:4px;background:#EDE6DA"></div>
+            <span style="font-size:13px;font-weight:700;color:#B08A5E;letter-spacing:.03em">1 / 2</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+              <span style="width:9px;height:9px;border-radius:50%;background:#F2C230"></span>
+              <span style="width:9px;height:9px;border-radius:50%;background:#E07B2C;margin-left:-4px"></span>
+              <span style="width:9px;height:9px;border-radius:50%;background:#8E5AA8;margin-left:-4px"></span>
+              <span style="font-size:13px;font-weight:700;color:#B0722E;letter-spacing:.02em;margin-left:4px">어느 목장에서 만날까요?</span>
+            </div>
+            <h2 style="margin:0 0 12px;font-size:24px;line-height:1.5;font-weight:800;color:#43331F;letter-spacing:-.01em;text-wrap:pretty">현재 학생비자이거나, 시드니에서 대학 재학 또는 입학 예정이신가요?</h2>
+            <p style="margin:0 0 28px;font-size:14px;line-height:1.6;color:#A88A66;text-wrap:pretty">Are you on a student visa, or studying / about to study at a university in Sydney?</p>
+
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <button onClick="{{ chooseYes }}" style="display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:20px;background:linear-gradient(135deg,#FFF7EC,#FDEFDD);border:1.5px solid #F0DBBE;border-radius:20px;cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .1s" style-hover="border-color:#E07B2C;box-shadow:0 14px 26px -14px rgba(224,123,44,.55)" style-active="transform:scale(.99)">
+                <span style="flex-shrink:0;width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#F2C230,#E07B2C);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -6px rgba(224,123,44,.7)">예</span>
+                <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:18px;font-weight:700;color:#43331F">예 · Yes</span><span style="font-size:13px;color:#A88A66;line-height:1.4">학생비자 · 대학 재학/입학 예정</span></span>
+              </button>
+              <button onClick="{{ chooseNo }}" style="display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:20px;background:linear-gradient(135deg,#F7F4FB,#F1EDF8);border:1.5px solid #DFD5EC;border-radius:20px;cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .1s" style-hover="border-color:#8E5AA8;box-shadow:0 14px 26px -14px rgba(142,90,168,.5)" style-active="transform:scale(.99)">
+                <span style="flex-shrink:0;width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#8E5AA8,#5C6BB0);color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -6px rgba(92,107,176,.7)">아니오</span>
+                <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:18px;font-weight:700;color:#3A2E45">아니오 · No</span><span style="font-size:13px;color:#94849E;line-height:1.4">위 내용에 해당하지 않음</span></span>
+              </button>
+            </div>
+            <p style="margin:26px 0 0;font-size:12.5px;line-height:1.55;color:#C0A985;text-align:center;text-wrap:pretty">편하게 골라주세요. 어떤 목장이든 반갑게 맞이할게요 🙂<br/>Either way, we're so glad you're here.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- 3. GENERAL FORM -->
+      <sc-if value="{{ isFormGeneral }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;box-sizing:border-box;padding:30px 22px 40px">
+          <button onClick="{{ goBack }}" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:18px;padding:8px 14px;font-size:13px;font-weight:700;color:#4B5AA3;background:#EDEFF8;border:none;border-radius:22px;cursor:pointer;transition:background .16s" style-hover="background:#E1E5F5">← 목장 다시 선택 · Back</button>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">
+            <div style="flex:1;height:6px;border-radius:3px;background:#4B5AA3"></div>
+            <div style="flex:1;height:6px;border-radius:3px;background:#4B5AA3"></div>
+            <span style="font-size:13px;font-weight:700;color:#8A8FA0">2 / 2</span>
+          </div>
+          <h2 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#2C3040;letter-spacing:-.01em">새가족 등록</h2>
+          <p style="margin:0 0 24px;font-size:13.5px;color:#8A8FA0">New Family Registration</p>
+
+          <!-- Section: 기본정보 -->
+          <div style="display:flex;align-items:center;gap:8px;margin:0 0 14px"><span style="width:4px;height:16px;border-radius:2px;background:#4B5AA3"></span><h3 style="margin:0;font-size:15px;font-weight:800;color:#3A3F52">기본정보 · Basic</h3></div>
+
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">이름 / Name <span style="color:#E4572E">*</span></label>
+            <input value="{{ form.name }}" onInput="{{ handlers.name }}" placeholder="예) 홍길동 / Gil-dong Hong" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+            <sc-if value="{{ errors.name }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.name }}</div></sc-if>
+          </div>
+
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">연락처 / Contact <span style="color:#E4572E">*</span></label>
+            <input value="{{ form.contact }}" onInput="{{ handlers.contact }}" inputMode="tel" placeholder="예) 0400 000 000" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+            <sc-if value="{{ errors.contact }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.contact }}</div></sc-if>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label style="font-size:13.5px;font-weight:700;color:#3A3F52">카카오톡 ID <span style="color:#A9ADBB;font-weight:500">(선택)</span></label><button onClick="{{ openKakaoHelp }}" title="카카오톡 ID 확인 방법" style="flex-shrink:0;width:18px;height:18px;border-radius:50%;border:1.5px solid #B7BBCB;background:#fff;color:#8A8FA0;font-size:12px;font-weight:700;font-style:italic;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s" style-hover="border-color:#4B5AA3;color:#4B5AA3">i</button></div>
+              <input value="{{ form.kakao }}" onInput="{{ handlers.kakao }}" placeholder="Kakao ID" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+            </div>
+            <div style="flex:1">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">생년월일 / Birth <span style="color:#E4572E">*</span></label>
+              <input value="{{ form.birth }}" onInput="{{ handlers.birth }}" type="date" style="width:100%;box-sizing:border-box;padding:13px 12px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+            </div>
+          </div>
+          <sc-if value="{{ errors.birth }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin:-8px 0 16px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.birth }}</div></sc-if>
+
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">인도자 / Invited by <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+            <input value="{{ form.leader }}" onInput="{{ handlers.leader }}" placeholder="나를 초대한 분" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+          </div>
+
+          <!-- Section: 교회관련정보 -->
+          <div style="display:flex;align-items:center;gap:8px;margin:28px 0 14px"><span style="width:4px;height:16px;border-radius:2px;background:#4B5AA3"></span><h3 style="margin:0;font-size:15px;font-weight:800;color:#3A3F52">교회 관련 · Church</h3></div>
+
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">세례 여부 / Baptism <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+            <select value="{{ form.baptism }}" onChange="{{ handlers.baptism }}" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;appearance:none;transition:border-color .15s" style-focus="border-color:#4B5AA3">
+              <option value="">선택 안 함</option><option value="세례">세례 받음</option><option value="유아세례">유아세례</option><option value="미세례">미세례</option><option value="모름">잘 모름</option>
+            </select>
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">이전 출석교회 <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+            <input value="{{ form.prevChurch }}" onInput="{{ handlers.prevChurch }}" placeholder="Previous church" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">이전 봉사부서 <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+            <input value="{{ form.prevDept }}" onInput="{{ handlers.prevDept }}" placeholder="예) 찬양팀, 주일학교" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+          </div>
+
+          <!-- Section: 생활정보 -->
+          <div style="display:flex;align-items:center;gap:8px;margin:28px 0 14px"><span style="width:4px;height:16px;border-radius:2px;background:#4B5AA3"></span><h3 style="margin:0;font-size:15px;font-weight:800;color:#3A3F52">생활 정보 · Life</h3></div>
+
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">비자 종류 / Visa <span style="color:#E4572E">*</span></label>
+            <select value="{{ form.visa }}" onChange="{{ handlers.visa }}" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;appearance:none;transition:border-color .15s" style-focus="border-color:#4B5AA3">
+              <option value="">선택해주세요 / Select</option><option value="워킹홀리데이">워킹홀리데이 / Working Holiday</option><option value="영주권">영주권 / PR</option><option value="시민권">시민권 / Citizen</option><option value="여행">여행 / Tourist</option><option value="학생">학생 / Student</option><option value="기타">기타 / Other</option>
+            </select>
+            <sc-if value="{{ errors.visa }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.visa }}</div></sc-if>
+            <sc-if value="{{ visaIsOther }}" hint-placeholder-val="{{ false }}">
+              <input value="{{ form.visaOther }}" onInput="{{ handlers.visaOther }}" placeholder="비자 종류를 직접 입력 / Enter visa type" style="width:100%;box-sizing:border-box;margin-top:10px;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+              <sc-if value="{{ errors.visaOther }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.visaOther }}</div></sc-if>
+            </sc-if>
+          </div>
+          <div style="margin-bottom:8px">
+            <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">전공 또는 직업 <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+            <input value="{{ form.job }}" onInput="{{ handlers.job }}" placeholder="Major or occupation" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#4B5AA3" />
+          </div>
+
+          <button onClick="{{ submitGeneral }}" disabled="{{ submitting }}" style="width:100%;margin-top:22px;padding:18px;font-size:17px;font-weight:700;color:#fff;background:#4B5AA3;border:none;border-radius:16px;cursor:pointer;box-shadow:0 12px 22px -12px rgba(75,90,163,.7);transition:background .18s;display:flex;align-items:center;justify-content:center;gap:10px" style-hover="background:#3C4A8C">
+            <sc-if value="{{ submitting }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:scSpin .7s linear infinite;display:inline-block"></span></sc-if>
+            {{ submitLabel }}
+          </button>
+        </div>
+      </sc-if>
+
+      <!-- 4. UNIVERSITY HANDOFF -->
+      <sc-if value="{{ isFormUniv }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;box-sizing:border-box;padding:0 0 40px">
+          <div style="background:linear-gradient(135deg,#E8843A,#D9632A);padding:24px 24px 26px;color:#fff">
+            <button onClick="{{ goBack }}" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;padding:8px 14px;font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,.2);border:none;border-radius:22px;cursor:pointer;transition:background .16s" style-hover="background:rgba(255,255,255,.32)">← 목장 다시 선택 · Back</button>
+            <br/>
+            <span style="display:inline-block;font-size:12px;font-weight:800;letter-spacing:.06em;background:rgba(255,255,255,.22);padding:6px 13px;border-radius:20px;margin-bottom:14px">🎓 대학목장 · UNIVERSITY</span>
+            <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;letter-spacing:-.01em;text-wrap:pretty">대학목장에서 따로 연락드릴게요!</h2>
+            <p style="margin:0;font-size:14px;line-height:1.6;opacity:.95;text-wrap:pretty">대학생·청년을 위한 대학목장이 있습니다. 아래 정보를 남겨주시면 대학팀에서 곧 연락드립니다.<br/><span style="opacity:.85;font-size:13px">Our university team will reach out to you soon.</span></p>
+          </div>
+
+          <div style="padding:24px 22px 0">
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">이름 / Name <span style="color:#E4572E">*</span></label>
+              <input value="{{ form.name }}" onInput="{{ handlers.name }}" placeholder="예) 홍길동" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+              <sc-if value="{{ errors.name }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.name }}</div></sc-if>
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">연락처 / Contact <span style="color:#E4572E">*</span></label>
+              <input value="{{ form.contact }}" onInput="{{ handlers.contact }}" inputMode="tel" placeholder="예) 0400 000 000" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+              <sc-if value="{{ errors.contact }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.contact }}</div></sc-if>
+            </div>
+            <div style="display:flex;gap:12px;margin-bottom:16px">
+              <div style="flex:1"><div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label style="font-size:13.5px;font-weight:700;color:#3A3F52">카카오톡 ID <span style="color:#A9ADBB;font-weight:500">(선택)</span></label><button onClick="{{ openKakaoHelp }}" title="카카오톡 ID 확인 방법" style="flex-shrink:0;width:18px;height:18px;border-radius:50%;border:1.5px solid #B7BBCB;background:#fff;color:#8A8FA0;font-size:12px;font-weight:700;font-style:italic;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s" style-hover="border-color:#4B5AA3;color:#4B5AA3">i</button></div>
+              <input value="{{ form.kakao }}" onInput="{{ handlers.kakao }}" placeholder="Kakao ID" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" /></div>
+              <div style="flex:1"><label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">생년월일 / Birth <span style="color:#E4572E">*</span></label>
+              <input value="{{ form.birth }}" onInput="{{ handlers.birth }}" type="date" style="width:100%;box-sizing:border-box;padding:13px 12px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" /></div>
+            </div>
+            <sc-if value="{{ errors.birth }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin:-8px 0 16px;font-size:13px;color:#D6392B;font-weight:600"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#D6392B;color:#fff;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">!</span>{{ errors.birth }}</div></sc-if>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">비자 종류 / Visa <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+              <select value="{{ form.visa }}" onChange="{{ handlers.visa }}" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;appearance:none;transition:border-color .15s" style-focus="border-color:#E07B2C">
+                <option value="">선택해주세요 / Select</option><option value="학생">학생 / Student</option><option value="워킹홀리데이">워킹홀리데이 / Working Holiday</option><option value="영주권">영주권 / PR</option><option value="시민권">시민권 / Citizen</option><option value="여행">여행 / Tourist</option><option value="기타">기타 / Other</option>
+              </select>
+              <sc-if value="{{ visaIsOther }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ form.visaOther }}" onInput="{{ handlers.visaOther }}" placeholder="비자 종류를 직접 입력 / Enter visa type" style="width:100%;box-sizing:border-box;margin-top:10px;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+              </sc-if>
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">전공 / Major <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+              <input value="{{ form.major }}" onInput="{{ handlers.major }}" placeholder="예) 회계학, IT" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">인도자 / Invited by <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+              <input value="{{ form.leader }}" onInput="{{ handlers.leader }}" placeholder="나를 초대한 분" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;margin:28px 0 14px"><span style="width:4px;height:16px;border-radius:2px;background:#E07B2C"></span><h3 style="margin:0;font-size:15px;font-weight:800;color:#3A3F52">교회 관련 · Church</h3></div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">세례 여부 / Baptism <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+              <select value="{{ form.baptism }}" onChange="{{ handlers.baptism }}" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;appearance:none;transition:border-color .15s" style-focus="border-color:#E07B2C">
+                <option value="">선택 안 함</option><option value="세례">세례 받음</option><option value="유아세례">유아세례</option><option value="미세례">미세례</option><option value="모름">잘 모름</option>
+              </select>
+            </div>
+            <div style="margin-bottom:16px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">이전 출석교회 <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+              <input value="{{ form.prevChurch }}" onInput="{{ handlers.prevChurch }}" placeholder="Previous church" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+            </div>
+            <div style="margin-bottom:8px">
+              <label style="display:block;font-size:13.5px;font-weight:700;color:#3A3F52;margin-bottom:7px">이전 봉사부서 <span style="color:#A9ADBB;font-weight:500">(선택)</span></label>
+              <input value="{{ form.prevDept }}" onInput="{{ handlers.prevDept }}" placeholder="예) 찬양팀, 주일학교" style="width:100%;box-sizing:border-box;padding:14px 15px;font-size:16px;border:1.5px solid #DEDDD8;border-radius:12px;background:#fff;color:#2C3040;outline:none;transition:border-color .15s" style-focus="border-color:#E07B2C" />
+            </div>
+
+            <button onClick="{{ submitUniv }}" disabled="{{ submitting }}" style="width:100%;margin-top:20px;padding:18px;font-size:17px;font-weight:700;color:#fff;background:#E07B2C;border:none;border-radius:16px;cursor:pointer;box-shadow:0 12px 22px -12px rgba(224,123,44,.7);transition:background .18s;display:flex;align-items:center;justify-content:center;gap:10px" style-hover="background:#CC6A1E">
+              <sc-if value="{{ submitting }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:scSpin .7s linear infinite;display:inline-block"></span></sc-if>
+              {{ univSubmitLabel }}
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- 5a. COMPLETE — GENERAL -->
+      <sc-if value="{{ isCompleteGeneral }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 30px">
+          <div style="width:96px;height:96px;border-radius:50%;background:#EDEFF8;display:flex;align-items:center;justify-content:center;margin-bottom:26px;animation:scPop .5s ease">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#4B5AA3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2 style="margin:0 0 12px;font-size:26px;font-weight:800;color:#2C3040;letter-spacing:-.01em">등록이 완료되었어요!</h2>
+          <p style="margin:0 0 6px;font-size:16px;line-height:1.6;color:#3A3F52;font-weight:600;text-wrap:pretty">주안교회 가족이 되신 것을<br/>진심으로 환영합니다. 🎉</p>
+          <p style="margin:0 0 40px;font-size:14px;line-height:1.6;color:#8A8FA0;text-wrap:pretty">Welcome to the Jooan Church family!<br/>담당 목자가 곧 연락드릴 예정입니다.</p>
+          <button onClick="{{ registerAgain }}" style="width:100%;padding:17px;font-size:16px;font-weight:700;color:#4B5AA3;background:#fff;border:1.5px solid #C9CFE6;border-radius:15px;cursor:pointer;transition:background .16s" style-hover="background:#F3F5FC">＋ 한 명 더 등록하기 · Register another</button>
+          <button onClick="{{ goHome }}" style="width:100%;margin-top:12px;padding:15px;font-size:15px;font-weight:700;color:#8A8FA0;background:none;border:none;border-radius:15px;cursor:pointer;transition:color .16s" style-hover="color:#4B5AA3">🏠 홈으로 돌아가기 · Home</button>
+        </div>
+      </sc-if>
+
+      <!-- 5b. COMPLETE — UNIVERSITY (share message) -->
+      <sc-if value="{{ isCompleteUniv }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;box-sizing:border-box;padding:40px 26px 40px;text-align:center">
+          <div style="width:88px;height:88px;border-radius:50%;background:#FBEEDF;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;animation:scPop .5s ease">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#E07B2C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2 style="margin:0 0 10px;font-size:24px;font-weight:800;color:#2C3040;letter-spacing:-.01em">등록이 완료되었어요!</h2>
+          <p style="margin:0 0 6px;font-size:16px;line-height:1.6;color:#3A3F52;font-weight:600;text-wrap:pretty">대학목장 담당자가<br/>곧 연락드릴 예정입니다. 🎓</p>
+          <p style="margin:0 0 36px;font-size:14px;line-height:1.6;color:#8A8FA0;text-wrap:pretty">Our university team will reach out to you soon.<br/>주안교회에 오신 것을 환영합니다!</p>
+          <button onClick="{{ registerAgain }}" style="width:100%;padding:17px;font-size:16px;font-weight:700;color:#D06C1E;background:#fff;border:1.5px solid #F0DBBE;border-radius:15px;cursor:pointer;transition:background .16s" style-hover="background:#FDF6EC">＋ 한 명 더 등록하기 · Register another</button>
+          <button onClick="{{ goHome }}" style="width:100%;margin-top:10px;padding:15px;font-size:15px;font-weight:700;color:#8A8FA0;background:none;border:none;border-radius:14px;cursor:pointer;transition:color .16s" style-hover="color:#E07B2C">🏠 홈으로 돌아가기 · Home</button>
+        </div>
+      </sc-if>
+
+      <!-- PIN LOCK (team access) -->
+      <sc-if value="{{ isPin }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:28px 30px 34px;background:#2C3040;color:#fff">
+          <button onClick="{{ pinCancel }}" style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:8px 13px;font-size:13px;font-weight:700;color:#B7BBCB;background:rgba(255,255,255,.1);border:none;border-radius:20px;cursor:pointer">← 앱으로</button>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:18px">🔒</div>
+            <h2 style="margin:0 0 6px;font-size:21px;font-weight:800">팀원 확인</h2>
+            <p style="margin:0 0 26px;font-size:13.5px;color:#B7BBCB;text-align:center;text-wrap:pretty">요약을 보려면 PIN 4자리를 입력하세요<br/>Enter the 4-digit team PIN</p>
+            <div style="display:flex;gap:16px;margin-bottom:14px">
+              <sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4">
+                <sc-if value="{{ d.filled }}" hint-placeholder-val="{{ false }}"><span style="width:15px;height:15px;border-radius:50%;background:#fff"></span></sc-if>
+                <sc-if value="{{ d.empty }}" hint-placeholder-val="{{ true }}"><span style="width:15px;height:15px;border-radius:50%;background:none;border:1.5px solid rgba(255,255,255,.4)"></span></sc-if>
+              </sc-for>
+            </div>
+            <div style="height:22px;margin-bottom:6px">
+              <sc-if value="{{ pinError }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:700;color:#F0A99B">PIN이 올바르지 않습니다. 다시 입력해주세요.</span></sc-if>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:280px">
+              <sc-for list="{{ pinKeys }}" as="k" hint-placeholder-count="12">
+                <sc-if value="{{ k.real }}" hint-placeholder-val="{{ true }}"><button onClick="{{ k.onClick }}" style="height:64px;font-size:24px;font-weight:700;color:#fff;background:rgba(255,255,255,.09);border:none;border-radius:16px;cursor:pointer;transition:background .12s" style-hover="background:rgba(255,255,255,.16)" style-active="background:rgba(255,255,255,.24)">{{ k.label }}</button></sc-if>
+                <sc-if value="{{ k.blank }}" hint-placeholder-val="{{ false }}"><span></span></sc-if>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- 6. TEAM SUMMARY -->
+      <sc-if value="{{ isSummary }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:scEnter .3s ease;box-sizing:border-box;padding:0 0 36px">
+          <div style="background:#2C3040;color:#fff;padding:26px 24px 22px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <span style="font-size:12px;font-weight:700;letter-spacing:.05em;color:#B7BBCB">팀원용 · TEAM ONLY</span>
+              <button onClick="{{ backToApp }}" style="padding:6px 12px;font-size:12.5px;font-weight:700;color:#B7BBCB;background:rgba(255,255,255,.1);border:none;border-radius:20px;cursor:pointer">← 앱으로</button>
+            </div>
+            <div style="display:flex;gap:6px;background:rgba(255,255,255,.08);border-radius:12px;padding:4px;margin-bottom:16px">
+              <sc-if value="{{ isViewToday }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setViewToday }}" style="flex:1;padding:10px;font-size:13.5px;font-weight:700;color:#2C3040;background:#fff;border:none;border-radius:9px;cursor:pointer">오늘</button></sc-if>
+              <sc-if value="{{ isViewArchive }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setViewToday }}" style="flex:1;padding:10px;font-size:13.5px;font-weight:700;color:#B7BBCB;background:none;border:none;border-radius:9px;cursor:pointer">오늘</button></sc-if>
+              <sc-if value="{{ isViewArchive }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setViewArchive }}" style="flex:1;padding:10px;font-size:13.5px;font-weight:700;color:#2C3040;background:#fff;border:none;border-radius:9px;cursor:pointer">지난 기록</button></sc-if>
+              <sc-if value="{{ isViewToday }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setViewArchive }}" style="flex:1;padding:10px;font-size:13.5px;font-weight:700;color:#B7BBCB;background:none;border:none;border-radius:9px;cursor:pointer">지난 기록</button></sc-if>
+            </div>
+            <h2 style="margin:0 0 4px;font-size:21px;font-weight:800;letter-spacing:-.01em">등록 요약</h2>
+            <p style="margin:0 0 18px;font-size:13px;color:#B7BBCB">{{ summarySub }}</p>
+            <sc-if value="{{ showStats }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:10px">
+              <button onClick="{{ setFilterAll }}" style="flex:1;text-align:left;background:rgba(255,255,255,.08);border:none;border-radius:14px;padding:14px 14px 11px;cursor:pointer"><div style="font-size:26px;font-weight:800;line-height:1;color:#fff">{{ totalCount }}</div><div style="font-size:12px;color:#B7BBCB;margin-top:3px">총 등록</div><sc-if value="{{ isFilterAll }}" hint-placeholder-val="{{ true }}"><div style="height:3px;border-radius:2px;background:#fff;margin-top:8px"></div></sc-if></button>
+              <button onClick="{{ setFilterGeneral }}" style="flex:1;text-align:left;background:rgba(255,255,255,.08);border:none;border-radius:14px;padding:14px 14px 11px;cursor:pointer"><div style="font-size:26px;font-weight:800;line-height:1;color:#AEB9EC">{{ generalCount }}</div><div style="font-size:12px;color:#B7BBCB;margin-top:3px">일반목장</div><sc-if value="{{ isFilterGeneral }}" hint-placeholder-val="{{ false }}"><div style="height:3px;border-radius:2px;background:#AEB9EC;margin-top:8px"></div></sc-if></button>
+              <button onClick="{{ setFilterUniv }}" style="flex:1;text-align:left;background:rgba(255,255,255,.08);border:none;border-radius:14px;padding:14px 14px 11px;cursor:pointer"><div style="font-size:26px;font-weight:800;line-height:1;color:#F0A968">{{ univCount }}</div><div style="font-size:12px;color:#B7BBCB;margin-top:3px">대학목장</div><sc-if value="{{ isFilterUniv }}" hint-placeholder-val="{{ false }}"><div style="height:3px;border-radius:2px;background:#F0A968;margin-top:8px"></div></sc-if></button>
+            </div>
+            <p style="margin:12px 0 0;font-size:11.5px;color:#8890A6;text-align:center">카드를 눌러 목장별로 필터링하세요 · Tap a card to filter</p>
+            </sc-if>
+          </div>
+
+          <div style="padding:18px 22px 0">
+
+            <sc-if value="{{ showMonthPicker }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#3A3F52">달을 선택하세요</p>
+              <div style="font-size:18px;font-weight:800;color:#4B5AA3;margin-bottom:12px">{{ archiveYearLabel }}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px">
+                <sc-for list="{{ archiveMonths }}" as="m" hint-placeholder-count="2">
+                  <button onClick="{{ m.onPick }}" style="padding:14px 22px;font-size:16px;font-weight:800;color:#3C4A8C;background:#EDEFF8;border:1.5px solid #DBE0F1;border-radius:14px;cursor:pointer;transition:background .16s" style-hover="background:#E1E5F5">{{ m.label }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showWeekPicker }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ backToMonths }}" style="display:inline-flex;align-items:center;gap:5px;margin-bottom:14px;padding:8px 13px;font-size:13px;font-weight:700;color:#6B7080;background:#F2F1EC;border:none;border-radius:20px;cursor:pointer">← 달 다시 선택</button>
+              <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#3A3F52">주일을 선택하세요</p>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ archiveWeeks }}" as="w" hint-placeholder-count="3">
+                  <button onClick="{{ w.onPick }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid #EDEBE4;border-radius:14px;padding:15px 15px;cursor:pointer;transition:background .14s,border-color .14s" style-hover="background:#FAF9F6;border-color:#DAD8D0">
+                    <span style="flex-shrink:0;width:40px;height:40px;border-radius:12px;background:#EDEFF8;color:#3C4A8C;display:flex;align-items:center;justify-content:center">📅</span>
+                    <span style="flex:1"><span style="display:block;font-size:15.5px;font-weight:700;color:#2C3040">{{ w.label }}</span><span style="font-size:13px;color:#8A8FA0">{{ w.count }}명 등록</span></span>
+                    <span style="flex-shrink:0;color:#C2C0B8;font-size:18px;font-weight:700">›</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showStats }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ canGoBackToWeeks }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ backToWeeks }}" style="display:inline-flex;align-items:center;gap:5px;margin-bottom:14px;padding:8px 13px;font-size:13px;font-weight:700;color:#6B7080;background:#F2F1EC;border:none;border-radius:20px;cursor:pointer">← 주일 다시 선택</button>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ today }}" as="p" hint-placeholder-count="3">
+                <button onClick="{{ p.onEdit }}" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#fff;border:1px solid #EDEBE4;border-radius:14px;padding:12px 13px;cursor:pointer;transition:background .14s,border-color .14s" style-hover="background:#FAF9F6;border-color:#DAD8D0">
+                  <span style="flex-shrink:0;width:38px;height:38px;border-radius:11px;background:#F2F1EC;color:#6B7080;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ p.initial }}</span>
+                  <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700;color:#2C3040;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</div><div style="display:flex;align-items:center;gap:7px;margin-top:2px"><span style="font-size:13px;color:#8A8FA0">{{ p.yearLabel }}</span><sc-if value="{{ p.isUniv }}" hint-placeholder-val="{{ false }}"><span style="flex-shrink:0;font-size:11px;font-weight:800;color:#D06C1E;background:#FBEEDF;padding:3px 9px;border-radius:16px">대학</span></sc-if><sc-if value="{{ p.isGeneral }}" hint-placeholder-val="{{ true }}"><span style="flex-shrink:0;font-size:11px;font-weight:800;color:#3C4A8C;background:#EDEFF8;padding:3px 9px;border-radius:16px">일반</span></sc-if></div></div>
+                  <sc-if value="{{ p.editable }}" hint-placeholder-val="{{ true }}"><span style="flex-shrink:0;color:#C2C0B8;font-size:18px;font-weight:700">›</span></sc-if>
+                </button>
+              </sc-for>
+              <sc-if value="{{ filteredEmpty }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:32px 12px;color:#A9ADBB;font-size:14px;font-weight:600">해당 목장에 등록된 새가족이 없습니다.</div></sc-if>
+            </div>
+
+            <sc-if value="{{ hasUnivToday }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ openUnivMsg }}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:16px;font-size:15px;font-weight:700;color:#fff;background:#E07B2C;border:none;border-radius:14px;cursor:pointer;box-shadow:0 12px 22px -14px rgba(224,123,44,.7);transition:background .16s" style-hover="background:#CC6A1E">🎓 대학목장 전달 메시지 만들기</button>
+            </sc-if>
+
+            <div style="display:flex;gap:12px;margin-top:12px">
+              <button onClick="{{ copySummary }}" style="flex:1;padding:16px;font-size:15px;font-weight:700;color:#fff;background:#4B5AA3;border:none;border-radius:14px;cursor:pointer;transition:background .16s" style-hover="background:#3C4A8C">{{ copySummaryLabel }}</button>
+              <button onClick="{{ shareSummary }}" style="flex:1;padding:16px;font-size:15px;font-weight:700;color:#4B5AA3;background:#EDEFF8;border:none;border-radius:14px;cursor:pointer;transition:background .16s" style-hover="background:#E1E5F5">공유하기 · Share</button>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <sc-if value="{{ showCornerLogo }}" hint-placeholder-val="{{ false }}">
+      <img src="image/juanlogo.png" alt="" style="position:absolute;top:15px;right:16px;height:30px;z-index:15;pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.18))" />
+    </sc-if>
+
+    <!-- Kakao ID help popup -->
+    <sc-if value="{{ showKakaoHelp }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeKakaoHelp }}" style="position:absolute;inset:0;background:rgba(30,28,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:30;animation:scEnter .2s ease">
+        <div onClick="{{ stop }}" style="width:100%;box-sizing:border-box;background:#fff;border-radius:26px 26px 38px 38px;padding:22px 22px 30px;box-shadow:0 -14px 40px -12px rgba(0,0,0,.4)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <h3 style="margin:0;font-size:18px;font-weight:800;color:#2C3040">카카오톡 ID 확인 방법</h3>
+            <button onClick="{{ closeKakaoHelp }}" style="display:inline-flex;align-items:center;gap:5px;padding:8px 13px;font-size:13px;font-weight:700;color:#4B5AA3;background:#EDEFF8;border:none;border-radius:20px;cursor:pointer;transition:background .16s" style-hover="background:#E1E5F5">← Back</button>
+          </div>
+          <p style="margin:0 0 16px;font-size:13px;color:#8A8FA0">How to find your Kakao ID</p>
+          <ol style="margin:0;padding:0;list-style:none;counter-reset:kk;display:flex;flex-direction:column;gap:12px">
+            <li style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#4B5AA3;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">1</span><span style="font-size:15px;line-height:1.5;color:#3A3F52;padding-top:2px;text-wrap:pretty">화면 하단 네비게이션에서 <b style="color:#2C3040">사람 아이콘</b>을 누릅니다.</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#4B5AA3;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span><span style="font-size:15px;line-height:1.5;color:#3A3F52;padding-top:2px;text-wrap:pretty">화면 오른쪽 위의 <b style="color:#2C3040">톱니바퀴(설정) 아이콘</b>을 누릅니다.</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#4B5AA3;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">3</span><span style="font-size:15px;line-height:1.5;color:#3A3F52;padding-top:2px;text-wrap:pretty">상단 오른쪽의 <b style="color:#2C3040">친구 추가(+) 아이콘</b>을 누릅니다.</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#4B5AA3;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">4</span><span style="font-size:15px;line-height:1.5;color:#3A3F52;padding-top:2px;text-wrap:pretty">내 이름 아래에 표시되는 <b style="color:#2C3040">카카오톡 ID</b>를 확인합니다.</span></li>
+          </ol>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- University handoff message popup -->
+    <sc-if value="{{ showUnivMsg }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeUnivMsg }}" style="position:absolute;inset:0;background:rgba(30,28,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:30;animation:scEnter .2s ease">
+        <div onClick="{{ stop }}" style="width:100%;box-sizing:border-box;background:#fff;border-radius:26px 26px 38px 38px;padding:22px 22px 28px;box-shadow:0 -14px 40px -12px rgba(0,0,0,.4);max-height:86%;overflow-y:auto">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <h3 style="margin:0;font-size:18px;font-weight:800;color:#2C3040">대학목장 전달 메시지</h3>
+            <button onClick="{{ closeUnivMsg }}" style="display:inline-flex;align-items:center;gap:5px;padding:8px 13px;font-size:13px;font-weight:700;color:#D06C1E;background:#FBEEDF;border:none;border-radius:20px;cursor:pointer;transition:background .16s" style-hover="background:#F6E2CC">닫기</button>
+          </div>
+          <p style="margin:0 0 14px;font-size:12.5px;line-height:1.55;color:#8A8FA0">오늘 대학목장으로 등록한 새가족 정보입니다. 복사해 대학팀에 전달해 주세요.</p>
+          <div style="background:#FBF7F1;border:1px solid #EEE4D6;border-radius:14px;padding:16px"><pre style="margin:0;font-family:inherit;white-space:pre-wrap;word-break:break-word;font-size:13.5px;line-height:1.7;color:#3A3F52">{{ univMsgText }}</pre></div>
+          <div style="display:flex;gap:12px;margin-top:16px">
+            <button onClick="{{ copyUnivMsg }}" style="flex:1;padding:16px;font-size:15px;font-weight:700;color:#fff;background:#E07B2C;border:none;border-radius:14px;cursor:pointer;transition:background .16s" style-hover="background:#CC6A1E">{{ copyUnivMsgLabel }}</button>
+            <button onClick="{{ shareUnivMsg }}" style="flex:1;padding:16px;font-size:15px;font-weight:700;color:#D06C1E;background:#FBEEDF;border:none;border-radius:14px;cursor:pointer;transition:background .16s" style-hover="background:#F6E2CC">공유하기 · Share</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Edit registrant sheet -->
+    <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ requestClose }}" style="position:absolute;inset:0;background:rgba(30,28,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:30;animation:scEnter .2s ease">
+        <div onClick="{{ stop }}" style="width:100%;box-sizing:border-box;background:#fff;border-radius:26px 26px 38px 38px;padding:18px 20px 26px;box-shadow:0 -14px 40px -12px rgba(0,0,0,.4);max-height:90%;overflow-y:auto;position:relative">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <button onClick="{{ requestClose }}" style="display:inline-flex;align-items:center;gap:5px;padding:8px 13px;font-size:13px;font-weight:700;color:#4B5AA3;background:#EDEFF8;border:none;border-radius:20px;cursor:pointer;transition:background .16s" style-hover="background:#E1E5F5">← 뒤로</button>
+            <h3 style="margin:0;font-size:18px;font-weight:800;color:#2C3040">등록 정보 수정</h3>
+          </div>
+
+          <label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:7px">목장 구분</label>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <sc-if value="{{ editDraftIsGeneral }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setEditFlowGeneral }}" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:11px;cursor:pointer;border:1.5px solid #4B5AA3;background:#EDEFF8;color:#3C4A8C">일반목장</button></sc-if>
+            <sc-if value="{{ editDraftIsUniv }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setEditFlowGeneral }}" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:11px;cursor:pointer;border:1.5px solid #E4E2DB;background:#fff;color:#8A8FA0">일반목장</button></sc-if>
+            <sc-if value="{{ editDraftIsUniv }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setEditFlowUniv }}" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:11px;cursor:pointer;border:1.5px solid #E07B2C;background:#FBEEDF;color:#D06C1E">대학목장</button></sc-if>
+            <sc-if value="{{ editDraftIsGeneral }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setEditFlowUniv }}" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:11px;cursor:pointer;border:1.5px solid #E4E2DB;background:#fff;color:#8A8FA0">대학목장</button></sc-if>
+          </div>
+
+          <div style="margin-bottom:13px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">이름 / Name</label>
+          <input value="{{ editDraft.name }}" onInput="{{ editHandlers.name }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#4B5AA3" /></div>
+          <div style="margin-bottom:13px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">태어난 해</label>
+          <input value="{{ editDraft.year }}" onInput="{{ editHandlers.year }}" inputMode="numeric" placeholder="예) 2002" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#4B5AA3" /></div>
+
+            <div style="height:1px;background:#EDEBE4;margin:6px 0 16px"></div>
+            <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#6B7080">상세 정보</p>
+            <div style="margin-bottom:13px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">연락처 / Contact</label>
+            <input value="{{ editDraft.contact }}" onInput="{{ editHandlers.contact }}" inputMode="tel" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+            <div style="display:flex;gap:11px;margin-bottom:13px">
+              <div style="flex:1"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">카카오톡 ID</label>
+              <input value="{{ editDraft.kakao }}" onInput="{{ editHandlers.kakao }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+              <div style="flex:1"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">생년월일</label>
+              <input value="{{ editDraft.birth }}" onInput="{{ editHandlers.birth }}" type="date" style="width:100%;box-sizing:border-box;padding:11px 10px;font-size:14px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+            </div>
+            <div style="display:flex;gap:11px;margin-bottom:13px">
+              <div style="flex:1"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">비자 종류</label>
+              <input value="{{ editDraft.visa }}" onInput="{{ editHandlers.visa }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+              <div style="flex:1"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">전공 / 직업</label>
+              <input value="{{ editDraft.major }}" onInput="{{ editHandlers.major }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+            </div>
+            <div style="margin-bottom:13px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">인도자</label>
+            <input value="{{ editDraft.leader }}" onInput="{{ editHandlers.leader }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+            <div style="margin-bottom:13px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">세례 여부</label>
+            <select value="{{ editDraft.baptism }}" onChange="{{ editHandlers.baptism }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none;appearance:none" style-focus="border-color:#E07B2C"><option value="">선택 안 함</option><option value="세례">세례 받음</option><option value="유아세례">유아세례</option><option value="미세례">미세례</option><option value="모름">잘 모름</option></select></div>
+            <div style="margin-bottom:13px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">이전 출석교회</label>
+            <input value="{{ editDraft.prevChurch }}" onInput="{{ editHandlers.prevChurch }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+            <div style="margin-bottom:6px"><label style="display:block;font-size:12.5px;font-weight:700;color:#6B7080;margin-bottom:6px">이전 봉사부서</label>
+            <input value="{{ editDraft.prevDept }}" onInput="{{ editHandlers.prevDept }}" style="width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;border:1.5px solid #DEDDD8;border-radius:11px;background:#fff;color:#2C3040;outline:none" style-focus="border-color:#E07B2C" /></div>
+
+          <button onClick="{{ saveEdit }}" style="width:100%;margin-top:18px;padding:16px;font-size:16px;font-weight:700;color:#fff;background:#4B5AA3;border:none;border-radius:14px;cursor:pointer;transition:background .16s" style-hover="background:#3C4A8C">저장하기 · Save</button>
+
+          <div style="margin-top:14px;padding-top:16px;border-top:1px solid #EDEBE4">
+            <sc-if value="{{ editDeleteIdle }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ armDelete }}" style="width:100%;padding:14px;font-size:14px;font-weight:700;color:#C6483A;background:#fff;border:1.5px solid #F0D9D5;border-radius:13px;cursor:pointer;transition:background .16s" style-hover="background:#FDF4F2">🗑 이 등록 삭제하기</button>
+            </sc-if>
+            <sc-if value="{{ editDeleteArm }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#FDF4F2;border:1px solid #F0D9D5;border-radius:13px;padding:14px;text-align:center">
+                <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#C6483A">이 등록을 삭제할까요? 되돌릴 수 없습니다.</p>
+                <div style="display:flex;gap:10px">
+                  <button onClick="{{ deleteCurrent }}" style="flex:1;padding:13px;font-size:14px;font-weight:700;color:#fff;background:#D6392B;border:none;border-radius:11px;cursor:pointer">삭제</button>
+                  <button onClick="{{ disarmDelete }}" style="flex:1;padding:13px;font-size:14px;font-weight:700;color:#6B7080;background:#fff;border:1px solid #E4E2DB;border-radius:11px;cursor:pointer">취소</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ showDiscard }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ cancelDiscard }}" style="position:absolute;inset:0;background:rgba(30,28,40,.45);display:flex;align-items:center;justify-content:center;padding:26px;border-radius:26px 26px 38px 38px;z-index:5;animation:scEnter .18s ease">
+              <div onClick="{{ stop }}" style="background:#fff;border-radius:20px;padding:22px 20px;box-shadow:0 16px 40px -12px rgba(0,0,0,.4);text-align:center">
+                <p style="margin:0 0 6px;font-size:17px;font-weight:800;color:#2C3040">저장되지 않은 변경사항</p>
+                <p style="margin:0 0 18px;font-size:13.5px;line-height:1.55;color:#8A8FA0">변경한 내용을 저장하지 않고<br/>나가시겠어요?</p>
+                <div style="display:flex;gap:10px">
+                  <button onClick="{{ confirmDiscard }}" style="flex:1;padding:13px;font-size:14px;font-weight:700;color:#C6483A;background:#FDF4F2;border:1px solid #F0D9D5;border-radius:11px;cursor:pointer">저장 안 함</button>
+                  <button onClick="{{ cancelDiscard }}" style="flex:1;padding:13px;font-size:14px;font-weight:700;color:#fff;background:#4B5AA3;border:none;border-radius:11px;cursor:pointer">계속 수정</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- Team summary launcher (not part of new-family flow) -->
+  <sc-if value="{{ showLauncher }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ openSummary }}" style="display:flex;align-items:center;gap:8px;padding:11px 18px;font-size:13.5px;font-weight:700;color:#6B7080;background:rgba(255,255,255,.7);border:1px solid #DEDCD5;border-radius:24px;cursor:pointer;backdrop-filter:blur(6px);transition:background .16s" style-hover="background:#fff">👀 팀원용 · 오늘 등록 요약 보기</button>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:940},&quot;teamPin&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;1234&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Team access&quot;},&quot;showTeamLauncher&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;seedSampleList&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'welcome',
+    submitting: false,
+    showConsent: false,
+    showKakaoHelp: false,
+    copied: false,
+    copiedSummary: false,
+    copiedUnivMsg: false,
+    showUnivMsg: false,
+    summaryFilter: 'all',
+    editIndex: null,
+    editDraft: {},
+    editOriginal: '',
+    showDiscard: false,
+    editDeleteArm: false,
+    pinInput: '',
+    pinError: false,
+    teamUnlocked: false,
+    form: { name:'', contact:'', kakao:'', birth:'', birthYear:'', leader:'', visa:'', visaOther:'', job:'', major:'', baptism:'', prevChurch:'', prevDept:'', consent:false },
+    errors: {},
+    shareMsg: '',
+    today: [
+      { name:'김서연', year:'1999', flow:'general' },
+      { name:'David Lee', year:'2001', flow:'univ', info:{ contact:'0412 345 678', kakao:'davidlee01', birth:'2001-03-14', visa:'학생', major:'회계학 / Accounting', leader:'김목자', baptism:'세례', prevChurch:'서울영광교회', prevDept:'찬양팀' } },
+      { name:'박준호', year:'1988', flow:'general' },
+    ],
+    viewMode: 'today',
+    archiveMonth: null,
+    archiveDate: null,
+    archive: [
+      { date:'2026-08-09', people:[
+        { name:'정하늘', year:'1995', flow:'general', info:{ contact:'0421 111 222', visa:'영주권', major:'간호사', leader:'이집사' } },
+        { name:'Grace Kim', year:'2003', flow:'univ', info:{ contact:'0431 222 333', kakao:'grace_k', birth:'2003-06-02', visa:'학생', major:'디자인', leader:'박목자' } },
+      ]},
+      { date:'2026-08-02', people:[
+        { name:'한지민', year:'1990', flow:'general', info:{ contact:'0410 333 444', visa:'시민권', major:'회사원' } },
+        { name:'조은서', year:'1998', flow:'general', info:{ contact:'0499 555 666', visa:'워킹홀리데이', major:'바리스타' } },
+        { name:'Paul Choi', year:'2002', flow:'univ', info:{ contact:'0412 777 888', kakao:'paulc', birth:'2002-11-20', visa:'학생', major:'컴퓨터공학' } },
+      ]},
+      { date:'2026-07-26', people:[
+        { name:'윤도현', year:'1985', flow:'general', info:{ contact:'0400 999 000', visa:'영주권', major:'자영업' } },
+      ]},
+      { date:'2026-07-19', people:[
+        { name:'임수진', year:'1993', flow:'general', info:{ contact:'0422 121 212', visa:'시민권', major:'교사' } },
+        { name:'David Park', year:'2004', flow:'univ', info:{ contact:'0433 343 434', kakao:'davidp04', birth:'2004-02-10', visa:'학생', major:'경영학' } },
+      ]},
+    ],
+  };
+
+  componentDidMount() {
+    if (this.props.seedSampleList === false) this.setState({ today: [] });
+    this._overlayOpen = false;
+    this._fromPop = false;
+    this._ignorePop = false;
+    this._onPop = () => {
+      if (this._overlayOpen) { this._fromPop = true; this.closeTopOverlay(); }
+      else if (this._ignorePop) { this._ignorePop = false; }
+    };
+    window.addEventListener('popstate', this._onPop);
+  }
+  componentWillUnmount() { if (this._onPop) window.removeEventListener('popstate', this._onPop); }
+  _anyOverlay() {
+    const s = this.state;
+    return s.showDiscard || s.editDeleteArm || s.showKakaoHelp || s.showUnivMsg || s.editIndex !== null;
+  }
+  closeTopOverlay() {
+    const s = this.state;
+    if (s.showDiscard) return this.setState({ showDiscard: false });
+    if (s.editDeleteArm) return this.setState({ editDeleteArm: false });
+    if (s.showKakaoHelp) return this.setState({ showKakaoHelp: false });
+    if (s.showUnivMsg) return this.setState({ showUnivMsg: false });
+    if (s.editIndex !== null) return this.requestClose();
+  }
+  componentDidUpdate() {
+    const open = this._anyOverlay();
+    try {
+      if (open && !this._overlayOpen) { this._overlayOpen = true; if (!this._fromPop) history.pushState({ m:1 }, ''); this._fromPop = false; }
+      else if (open && this._overlayOpen) { if (this._fromPop) { history.pushState({ m:1 }, ''); this._fromPop = false; } }
+      else if (!open && this._overlayOpen) { this._overlayOpen = false; if (!this._fromPop) { this._ignorePop = true; history.back(); } this._fromPop = false; }
+    } catch (e) {}
+  }
+
+  go(screen) { this.setState({ screen }); requestAnimationFrame(() => { const el = document.querySelector('.scScreen'); if (el) el.scrollTop = 0; }); }
+
+  resetForm() { return { name:'', contact:'', kakao:'', birth:'', birthYear:'', leader:'', visa:'', visaOther:'', job:'', major:'', baptism:'', prevChurch:'', prevDept:'', consent:false }; }
+
+  makeHandlers() {
+    const keys = ['name','contact','kakao','birth','birthYear','leader','visa','visaOther','job','major','baptism','prevChurch','prevDept'];
+    const h = {};
+    keys.forEach(k => { h[k] = e => this.setState(s => ({ form:{...s.form,[k]:e.target.value}, errors:{...s.errors,[k]:undefined} })); });
+    h.consent = e => this.setState(s => ({ form:{...s.form,consent:e.target.checked}, errors:{...s.errors,consent:undefined} }));
+    return h;
+  }
+
+  validateGeneral() {
+    const f = this.state.form, er = {};
+    if (!f.name.trim()) er.name = '이름을 입력해주세요 / Please enter your name';
+    if (!f.contact.trim()) er.contact = '연락처를 입력해주세요 / Please enter your contact';
+    if (!f.birth) er.birth = '생년월일을 입력해주세요 / Please enter your birth date';
+    if (!f.visa) er.visa = '비자 종류를 선택해주세요 / Please select a visa type';
+    if (f.visa === '기타' && !f.visaOther.trim()) er.visaOther = '비자 종류를 입력해주세요 / Please enter your visa type';
+    return er;
+  }
+  validateUniv() {
+    const f = this.state.form, er = {};
+    if (!f.name.trim()) er.name = '이름을 입력해주세요 / Please enter your name';
+    if (!f.contact.trim()) er.contact = '연락처를 입력해주세요 / Please enter your contact';
+    if (!f.birth) er.birth = '생년월일을 입력해주세요 / Please enter your birth date';
+    return er;
+  }
+
+  submitGeneral() {
+    const er = this.validateGeneral();
+    if (Object.keys(er).length) { this.setState({ errors: er }); return; }
+    this.setState({ submitting: true });
+    setTimeout(() => {
+      const f = this.state.form;
+      const year = f.birth ? f.birth.slice(0,4) : '';
+      const effVisa = f.visa === '기타' && f.visaOther.trim() ? f.visaOther : f.visa;
+      const info = { contact:f.contact, kakao:f.kakao, birth:f.birth, visa:effVisa, major:f.job, leader:f.leader, baptism:f.baptism, prevChurch:f.prevChurch, prevDept:f.prevDept };
+      this.setState(s => ({ submitting:false, today:[...s.today, { name:f.name, year, flow:'general', info }] }));
+      this.go('completeGeneral');
+    }, 950);
+  }
+
+  submitUniv() {
+    const er = this.validateUniv();
+    if (Object.keys(er).length) { this.setState({ errors: er }); return; }
+    this.setState({ submitting: true });
+    setTimeout(() => {
+      const f = this.state.form;
+      const line = (label, v) => v && String(v).trim() ? `${label}: ${v}\n` : '';
+      const msg = `[주안교회 대학목장 새가족]\n`
+        + line('이름', f.name)
+        + line('연락처', f.contact)
+        + line('카카오톡', f.kakao)
+        + line('생년월일', f.birth)
+        + line('비자', f.visa === '기타' && f.visaOther.trim() ? f.visaOther : f.visa)
+        + line('전공', f.major)
+        + line('인도자', f.leader)
+        + `\n대학팀에서 연락 부탁드립니다 🙏`;
+      const effVisa = f.visa === '기타' && f.visaOther.trim() ? f.visaOther : f.visa;
+      const info = { contact:f.contact, kakao:f.kakao, birth:f.birth, visa:effVisa, major:f.major, leader:f.leader, baptism:f.baptism, prevChurch:f.prevChurch, prevDept:f.prevDept };
+      this.setState(s => ({ submitting:false, shareMsg:msg, today:[...s.today, { name:f.name, year:f.birth?f.birth.slice(0,4):'', flow:'univ', info }] }));
+      this.go('completeUniv');
+    }, 950);
+  }
+
+  copyText(text, key) {
+    const done = () => { this.setState({ [key]: true }); setTimeout(() => this.setState({ [key]: false }), 1800); };
+    try { navigator.clipboard.writeText(text).then(done, done); } catch(e) { done(); }
+  }
+  shareText(text) {
+    if (navigator.share) { navigator.share({ text }).catch(()=>{}); }
+    else { this.copyText(text, 'copied'); }
+  }
+
+  pinPress(d) {
+    const cur = this.state.pinInput;
+    if (cur.length >= 4) return;
+    const next = cur + String(d);
+    if (next.length < 4) { this.setState({ pinInput: next, pinError: false }); return; }
+    const pin = String(this.props.teamPin ?? '1234');
+    if (next === pin) { this.setState({ teamUnlocked: true, pinInput: '', pinError: false }); this.go('summary'); }
+    else { this.setState({ pinInput: '', pinError: true }); }
+  }
+  pinDel() { this.setState(s => ({ pinInput: s.pinInput.slice(0,-1), pinError: false })); }
+
+  activeList() {
+    if (this.state.viewMode === 'today') return this.state.today;
+    const sess = this.state.archive.find(x => x.date === this.state.archiveDate);
+    return sess ? sess.people : [];
+  }
+  serviceSunday() {
+    const d = new Date();
+    d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
+    return d;
+  }
+  activeDateLabel() {
+    if (this.state.viewMode === 'today') { const d = this.serviceSunday(); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; }
+    if (!this.state.archiveDate) return '';
+    const [y,m,dd] = this.state.archiveDate.split('-').map(Number);
+    return `${y}년 ${m}월 ${dd}일`;
+  }
+  weekLabel(dateStr) {
+    const [ , m, dd] = dateStr.split('-').map(Number);
+    const ord = ['첫째','둘째','셋째','넷째','다섯째','여섯째'][Math.ceil(dd/7)-1];
+    return `${m}월 ${ord} 주일 (${m}/${dd})`;
+  }
+
+  univMessage() {
+    const u = this.activeList().filter(p => p.flow === 'univ');
+    const line = (l, v) => v && String(v).trim() ? `${l}: ${v}\n` : '';
+    const dateStr = this.activeDateLabel();
+    let s = `[주안교회 대학목장 새가족 전달]\n${dateStr}\n대학목장 등록 ${u.length}명\n`;
+    u.forEach((p, i) => {
+      s += `\n${i + 1}. ${p.name}\n`;
+      if (p.info) { s += line('연락처', p.info.contact) + line('카카오톡', p.info.kakao) + line('생년월일', p.info.birth) + line('비자', p.info.visa) + line('전공', p.info.major) + line('인도자', p.info.leader) + line('세례여부', p.info.baptism) + line('이전출석교회', p.info.prevChurch) + line('이전봉사부서', p.info.prevDept); }
+    });
+    s += `\n대학팀에서 연락 부탁드립니다 🙏`;
+    return s;
+  }
+
+  summaryText() {
+    const t = this.state.today;
+    const g = t.filter(p=>p.flow==='general').length, u = t.filter(p=>p.flow==='univ').length;
+    let s = `[주안교회 오늘 새가족 등록]\n총 ${t.length}명 · 일반목장 ${g}명 / 대학목장 ${u}명\n\n`;
+    t.forEach((p,i) => { s += `${i+1}. ${p.name} (${p.year||'—'}) · ${p.flow==='univ'?'대학목장':'일반목장'}\n`; });
+    return s;
+  }
+
+  startEdit(i) {
+    const p = this.state.today[i], info = p.info || {};
+    const draft = {
+      name:p.name||'', year:p.year||'', flow:p.flow||'general',
+      contact:info.contact||'', kakao:info.kakao||'', birth:info.birth||'', visa:info.visa||'',
+      major:info.major||'', leader:info.leader||'', baptism:info.baptism||'', prevChurch:info.prevChurch||'', prevDept:info.prevDept||''
+    };
+    this.setState({ editIndex: i, editDraft: draft, editOriginal: JSON.stringify(draft), showDiscard: false, editDeleteArm: false });
+  }
+  requestClose() {
+    if (JSON.stringify(this.state.editDraft) !== this.state.editOriginal) this.setState({ showDiscard: true });
+    else this.setState({ editIndex: null, editDeleteArm: false });
+  }
+  saveEdit() {
+    const d = this.state.editDraft, i = this.state.editIndex;
+    if (i == null) return;
+    const item = { name:d.name, year:d.year, flow:d.flow, info: { contact:d.contact, kakao:d.kakao, birth:d.birth, visa:d.visa, major:d.major, leader:d.leader, baptism:d.baptism, prevChurch:d.prevChurch, prevDept:d.prevDept } };
+    this.setState(s => { const t = [...s.today]; t[i] = item; return { today:t, editIndex:null, editDeleteArm:false, showDiscard:false }; });
+  }
+  deleteCurrent() {
+    const i = this.state.editIndex;
+    this.setState(s => ({ today: s.today.filter((_,j) => j !== i), editIndex:null, editDeleteArm:false, showDiscard:false }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const editKeys = ['name','year','contact','kakao','birth','visa','major','leader','baptism','prevChurch','prevDept'];
+    const editHandlers = {};
+    editKeys.forEach(k => { editHandlers[k] = e => this.setState(st => ({ editDraft: {...st.editDraft, [k]: e.target.value} })); });
+    const filter = s.summaryFilter;
+    const people = this.activeList();
+    const editable = s.viewMode === 'today';
+    const showStats = s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
+    const today = people
+      .map((p, i) => ({
+        name: p.name,
+        initial: (p.name||'?').trim().charAt(0),
+        yearLabel: p.year ? `${p.year}년생` : '출생연도 미입력',
+        isUniv: p.flow === 'univ',
+        isGeneral: p.flow !== 'univ',
+        editable,
+        flow: p.flow,
+        onEdit: editable ? () => this.startEdit(i) : (() => {}),
+      }))
+      .filter(p => filter === 'all' || (filter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'));
+    const months = [...new Set(s.archive.map(x => x.date.slice(0,7)))];
+    const archiveMonths = months.map(k => ({ key:k, label:`${Number(k.slice(5,7))}월`, active:s.archiveMonth===k, onPick:()=>this.setState({archiveMonth:k, archiveDate:null}) }));
+    const archiveWeeks = s.archiveMonth
+      ? s.archive.filter(x => x.date.slice(0,7)===s.archiveMonth).map(x => ({ date:x.date, label:this.weekLabel(x.date), count:x.people.length, active:s.archiveDate===x.date, onPick:()=>this.setState({archiveDate:x.date, summaryFilter:'all'}) }))
+      : [];
+    return {
+      isWelcome: s.screen==='welcome',
+      isQuestion: s.screen==='question',
+      isFormGeneral: s.screen==='formGeneral',
+      isFormUniv: s.screen==='formUniv',
+      isCompleteGeneral: s.screen==='completeGeneral',
+      isCompleteUniv: s.screen==='completeUniv',
+      isSummary: s.screen==='summary',
+      showLauncher: (this.props.showTeamLauncher ?? true) && s.screen!=='summary' && s.screen!=='pin',
+      form: s.form,
+      errors: s.errors,
+      submitting: s.submitting,
+      showConsent: s.showConsent,
+      visaIsOther: s.form.visa === '기타',
+      handlers: this.makeHandlers(),
+      submitLabel: s.submitting ? '제출 중…' : '제출하기 · Submit',
+      univSubmitLabel: s.submitting ? '제출 중…' : '제출하기 · Submit',
+      goStart: () => this.go('question'),
+      goBack: () => { this.setState({ errors:{} }); this.go('question'); },
+      chooseYes: () => { this.setState({ errors:{} }); this.go('formUniv'); },
+      chooseNo: () => { this.setState({ errors:{} }); this.go('formGeneral'); },
+      toggleConsent: () => this.setState(st => ({ showConsent: !st.showConsent })),
+      showKakaoHelp: s.showKakaoHelp,
+      openKakaoHelp: () => this.setState({ showKakaoHelp: true }),
+      closeKakaoHelp: () => this.setState({ showKakaoHelp: false }),
+      stop: (e) => { e.stopPropagation(); },
+      submitGeneral: () => this.submitGeneral(),
+      submitUniv: () => this.submitUniv(),
+      registerAgain: () => { this.setState({ form:this.resetForm(), errors:{} }); this.go('question'); },
+      goHome: () => { this.setState({ form:this.resetForm(), errors:{}, shareMsg:'' }); this.go('welcome'); },
+      shareMsg: s.shareMsg,
+      copyLabel: s.copied ? '✓ 복사됨' : '복사하기 · Copy',
+      copyShare: () => this.copyText(s.shareMsg, 'copied'),
+      shareShare: () => this.shareText(s.shareMsg),
+      openSummary: () => { if (this.state.teamUnlocked) this.go('summary'); else { this.setState({ pinInput:'', pinError:false }); this.go('pin'); } },
+      backToApp: () => this.go('welcome'),
+      isPin: s.screen === 'pin',
+      pinDots: [0,1,2,3].map(i => ({ filled: i < s.pinInput.length, empty: i >= s.pinInput.length })),
+      pinError: s.pinError,
+      pinKeys: ['1','2','3','4','5','6','7','8','9','','0','del'].map(k => ({
+        label: k === 'del' ? '⌫' : k, blank: k === '', real: k !== '',
+        onClick: k === '' ? (() => {}) : (k === 'del' ? () => this.pinDel() : () => this.pinPress(k)),
+      })),
+      pinCancel: () => { this.setState({ pinInput:'', pinError:false }); this.go('welcome'); },
+      today,
+      filteredEmpty: today.length === 0,
+      totalCount: people.length,
+      generalCount: people.filter(p=>p.flow==='general').length,
+      univCount: people.filter(p=>p.flow==='univ').length,
+      showStats,
+      isViewToday: s.viewMode === 'today',
+      isViewArchive: s.viewMode === 'archive',
+      showMonthPicker: s.viewMode === 'archive' && !s.archiveMonth,
+      showWeekPicker: s.viewMode === 'archive' && !!s.archiveMonth && !s.archiveDate,
+      activeDateLabel: this.activeDateLabel(),
+      summarySub: showStats ? this.activeDateLabel() : (s.viewMode === 'archive' && s.archiveMonth ? '주일을 선택하세요' : '달을 선택하세요'),
+      setViewToday: () => this.setState({ viewMode:'today', archiveMonth:null, archiveDate:null, summaryFilter:'all' }),
+      setViewArchive: () => this.setState({ viewMode:'archive', summaryFilter:'all' }),
+      backToMonths: () => this.setState({ archiveMonth:null, archiveDate:null }),
+      backToWeeks: () => this.setState({ archiveDate:null, summaryFilter:'all' }),
+      archiveMonths,
+      archiveWeeks,
+      archiveYearLabel: (() => { const ys = [...new Set(months.map(k => k.slice(0,4)))]; return ys.length ? ys.join(' · ') + '년' : `${new Date().getFullYear()}년`; })(),
+      canGoBackToWeeks: s.viewMode === 'archive' && !!s.archiveDate,
+      showCornerLogo: s.screen !== 'welcome' && s.screen !== 'summary' && s.screen !== 'pin',
+      isFilterAll: s.summaryFilter === 'all',
+      isFilterGeneral: s.summaryFilter === 'general',
+      isFilterUniv: s.summaryFilter === 'univ',
+      setFilterAll: () => this.setState({ summaryFilter: 'all' }),
+      setFilterGeneral: () => this.setState(st => ({ summaryFilter: st.summaryFilter==='general' ? 'all' : 'general' })),
+      setFilterUniv: () => this.setState(st => ({ summaryFilter: st.summaryFilter==='univ' ? 'all' : 'univ' })),
+      copySummaryLabel: s.copiedSummary ? '✓ 복사됨' : '복사하기 · Copy',
+      copySummary: () => this.copyText(this.summaryText(), 'copiedSummary'),
+      shareSummary: () => this.shareText(this.summaryText()),
+      univMsgText: this.univMessage(),
+      hasUnivToday: showStats && people.some(p=>p.flow==='univ') && s.summaryFilter !== 'general',
+      showUnivMsg: s.showUnivMsg,
+      openUnivMsg: () => this.setState({ showUnivMsg: true }),
+      closeUnivMsg: () => this.setState({ showUnivMsg: false }),
+      copyUnivMsgLabel: s.copiedUnivMsg ? '✓ 복사됨' : '복사하기 · Copy',
+      copyUnivMsg: () => this.copyText(this.univMessage(), 'copiedUnivMsg'),
+      shareUnivMsg: () => this.shareText(this.univMessage()),
+      isEditing: s.editIndex !== null,
+      editDraft: s.editDraft,
+      editDraftIsUniv: s.editDraft.flow === 'univ',
+      editDraftIsGeneral: s.editDraft.flow !== 'univ',
+      editHandlers,
+      setEditFlowGeneral: () => this.setState(st => ({ editDraft: {...st.editDraft, flow:'general'} })),
+      setEditFlowUniv: () => this.setState(st => ({ editDraft: {...st.editDraft, flow:'univ'} })),
+      saveEdit: () => this.saveEdit(),
+      requestClose: () => this.requestClose(),
+      isDirty: JSON.stringify(s.editDraft) !== s.editOriginal,
+      showDiscard: s.showDiscard,
+      confirmDiscard: () => this.setState({ editIndex:null, showDiscard:false, editDeleteArm:false }),
+      cancelDiscard: () => this.setState({ showDiscard:false }),
+      editDeleteArm: s.editDeleteArm,
+      editDeleteIdle: !s.editDeleteArm,
+      armDelete: () => this.setState({ editDeleteArm:true }),
+      disarmDelete: () => this.setState({ editDeleteArm:false }),
+      deleteCurrent: () => this.deleteCurrent(),
+    };
+  }
+}
+</script>
+</body>
+</html>
