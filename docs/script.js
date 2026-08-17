@@ -91,6 +91,20 @@
         resetForm(); go('welcome'); break;
       case 'pin':
         state.pinInput = ''; state.pinError = false; go('welcome'); break;
+      case 'summary':
+        // One step at a time: back out of search/지난 기록 to 오늘 first,
+        // and only go home once already sitting on 오늘 with no search.
+        if (isSearching() || state.viewMode !== 'today') {
+          state.searchQuery = '';
+          state.viewMode = 'today';
+          state.archiveMonth = null;
+          state.archiveDate = null;
+          state.summaryFilter = 'all';
+          go('summary');
+        } else {
+          go('welcome');
+        }
+        break;
       default:
         go('welcome');
     }
