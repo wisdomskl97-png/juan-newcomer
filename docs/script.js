@@ -43,7 +43,7 @@
     viewMode: 'today',
     archiveMonth: null,
     archiveDate: null,
-    archiveDisplay: 'monthly',
+    archiveDisplay: 'fullList',
     archiveCell: null,
     archiveSort: 'date',
     archive: []
@@ -1379,7 +1379,7 @@
     pinPress: function (el) { pinPress(el.getAttribute('data-value')); },
     pinDel: pinDel,
     setViewToday: function () { update(function () { state.viewMode = 'today'; state.archiveMonth = null; state.archiveDate = null; state.summaryFilter = 'all'; state.searchQuery = ''; }); },
-    setViewArchive: function () { update(function () { state.viewMode = 'archive'; state.summaryFilter = 'all'; state.searchQuery = ''; }); },
+    setViewArchive: function () { update(function () { state.viewMode = 'archive'; state.archiveDisplay = 'fullList'; state.archiveMonth = null; state.archiveDate = null; state.archiveCell = null; state.summaryFilter = 'all'; state.searchQuery = ''; }); },
     clearSearch: function () { update(function () { state.searchQuery = ''; }); },
     pickMonth: function (el) { update(function () { state.archiveMonth = el.getAttribute('data-key'); state.archiveDate = null; }); },
     pickWeek: function (el) { update(function () { state.archiveDate = el.getAttribute('data-date'); state.summaryFilter = 'all'; }); },
