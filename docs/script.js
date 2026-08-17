@@ -435,15 +435,16 @@
     return sess ? sess.people : [];
   }
 
-  // Every distinct date-group in state.archive, sorted earliest -> latest
-  // (state.archive itself is sorted newest-first for the month/week
-  // picker), flattened into one array. Shared by both the 전체 목록 view
-  // and the per-cell view below, since both list registrants regardless
-  // of date and just differ in which subset they include.
-  function archiveByDateAsc() {
-    var byDateAsc = state.archive.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  // Every distinct date-group in state.archive, sorted latest -> earliest
+  // (state.archive itself is already sorted newest-first for the
+  // month/week picker, so this is really just a flatten), flattened into
+  // one array. Shared by both the 전체 목록 view and the per-cell view
+  // below, since both list registrants regardless of date and just
+  // differ in which subset they include.
+  function archiveByDateDesc() {
+    var byDateDesc = state.archive.slice().sort(function (a, b) { return a.date > b.date ? -1 : a.date < b.date ? 1 : 0; });
     var all = [];
-    byDateAsc.forEach(function (g) { all = all.concat(g.people); });
+    byDateDesc.forEach(function (g) { all = all.concat(g.people); });
     return all;
   }
   function applyArchiveSort(list) {
@@ -452,10 +453,10 @@
   }
 
   // Flat list of every past registrant, spanning all dates. Default order
-  // is earliest -> latest registration; the small sort toggle switches to
+  // is latest -> earliest registration; the small sort toggle switches to
   // 가나다 (name) order instead.
   function archiveFullList() {
-    return applyArchiveSort(archiveByDateAsc());
+    return applyArchiveSort(archiveByDateDesc());
   }
 
   function cellKeyOf(p) {
@@ -468,7 +469,7 @@
   // no longer in state.cellOptions still gets its own row, so nobody
   // silently disappears from the picker.
   function archiveCellBuckets() {
-    var all = archiveByDateAsc();
+    var all = archiveByDateDesc();
     var counts = {};
     all.forEach(function (p) { var k = cellKeyOf(p); counts[k] = (counts[k] || 0) + 1; });
     var seen = {};
@@ -481,7 +482,7 @@
   }
 
   function archiveCellList(cellName) {
-    return applyArchiveSort(archiveByDateAsc().filter(function (p) { return cellKeyOf(p) === cellName; }));
+    return applyArchiveSort(archiveByDateDesc().filter(function (p) { return cellKeyOf(p) === cellName; }));
   }
 
   // Whether there's a concrete list of people to render at all right now
