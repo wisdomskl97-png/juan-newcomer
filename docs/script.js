@@ -391,6 +391,16 @@
     return sess ? sess.people : [];
   }
 
+  function archiveTotals() {
+    var all = [];
+    state.archive.forEach(function (g) { all = all.concat(g.people); });
+    return {
+      total: all.length,
+      general: all.filter(function (p) { return p.flow === 'general'; }).length,
+      univ: all.filter(function (p) { return p.flow === 'univ'; }).length
+    };
+  }
+
   function isSearching() {
     return !!(state.searchQuery && state.searchQuery.trim());
   }
@@ -773,7 +783,16 @@
       // so its visibility is toggled directly from that same input handler.
       '<button type="button" id="searchClearBtn" class="search-clear" data-action="clearSearch" style="visibility:' + (s.searchQuery ? 'visible' : 'hidden') + '">✕</button>' +
       '</div>';
-    html += '<h2>등록 요약</h2>';
+    html += '<div class="summary-title-row"><h2>등록 요약</h2>';
+    // The month/주일 picker stage (지난 기록, before a week is chosen)
+    // has nothing else next to the title — show all-time totals there so
+    // that space isn't just empty. Once a week/오늘/검색 has real stats
+    // showing below, the per-date stat cards already cover this.
+    if (!isSearching() && s.viewMode === 'archive' && !s.archiveDate) {
+      var grandTotals = archiveTotals();
+      html += '<span class="summary-title-total">총 ' + grandTotals.total + ' · 일반 ' + grandTotals.general + ' · 대학 ' + grandTotals.univ + '</span>';
+    }
+    html += '</div>';
     html += '<div id="summaryStats">' + renderSummaryStats() + '</div>';
     html += '</div>';
     html += '<div class="summary-body" id="summaryResults">' + renderSummaryList() + '</div>';
