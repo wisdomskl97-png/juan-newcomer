@@ -583,6 +583,10 @@
     var d = currentServiceSunday();
     return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
   }
+  function todayShortLabel() {
+    var d = currentServiceSunday();
+    return (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+  }
   function activeDateLabel() {
     if (state.viewMode === 'today') return todayLabel();
     if (state.viewMode === 'archive' && state.archiveDisplay === 'fullList') return '전체 등록자';
@@ -941,7 +945,7 @@
       '<button class="btn-pill" data-action="backToApp">🏠 홈으로</button>' +
       '</div></div>';
     html += '<div class="summary-tabs">';
-    html += '<button class="summary-tab ' + (s.viewMode === 'today' ? 'active' : '') + '" data-action="setViewToday">오늘</button>';
+    html += '<button class="summary-tab ' + (s.viewMode === 'today' ? 'active' : '') + '" data-action="setViewToday">' + esc(todayShortLabel()) + '</button>';
     html += '<button class="summary-tab ' + (s.viewMode === 'archive' ? 'active' : '') + '" data-action="setViewArchive">지난 기록</button>';
     html += '</div>';
     html += '<div class="search-row">' +
