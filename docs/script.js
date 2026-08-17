@@ -1097,7 +1097,7 @@
         if (hasUnivToday) {
           html += '<button class="univ-msg-btn" data-action="openUnivMsg">🎓 대학목장 전달 메시지 만들기</button>';
         }
-        html += '<button class="act-primary act-full" data-action="openSummaryPreview">' + (s.viewMode === 'today' ? '오늘 등록 요약 보기' : '등록 요약 보기') + '</button>';
+        html += '<button class="act-primary act-full" data-action="openSummaryPreview">' + (s.viewMode === 'today' ? esc(todayShortLabel()) + ' 등록 요약 보기' : '등록 요약 보기') + '</button>';
       }
     }
 
@@ -1174,7 +1174,7 @@
   function renderSummaryPreview(enter) {
     if (!state.showSummaryPreview) return '';
     var heading = state.summaryPreviewMonth ? monthSummaryLabel(state.summaryPreviewMonth) + ' 등록 요약'
-      : (state.viewMode === 'today' ? '오늘 등록 요약' : '등록 요약');
+      : (state.viewMode === 'today' ? todayShortLabel() + ' 등록 요약' : '등록 요약');
     return (
       '<div class="overlay ' + enter + '" data-overlay="summarypreview"><div class="sheet">' +
       '<div class="sheet-head"><h3>' + heading + '</h3><button class="btn-pill" data-action="closeSummaryPreview">닫기</button></div>' +
