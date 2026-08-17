@@ -958,7 +958,7 @@
         var chev = editable ? '<span class="chev">›</span>' : '';
         var action = editable ? ' data-action="startEdit" data-index="' + realIndex + '"' : '';
         var weekTick = function (v) { return v ? '<span class="week-tick done">✓</span>' : '<span class="week-tick"></span>'; };
-        var cellVal = info.cellGroup ? '<span class="person-cell-val">' + esc(info.cellGroup) + '</span>' : '<span class="person-cell-val empty">미배정</span>';
+        var cellVal = '<span class="person-cell-val">' + esc(info.cellGroup || '미배정') + '</span>';
         html += '<button class="person-row"' + action + (editable ? '' : ' style="cursor:default"') + '>' +
           '<div class="person-main"><div class="person-name">' + esc(p.name) + '</div><div class="person-meta">' +
           (dateLabel ? '<span class="person-date">' + esc(dateLabel) + ' 등록</span>' : '') + tag + '</div></div>' +

@@ -234,7 +234,6 @@ input:focus, select:focus { border-color: var(--general); }
 .week-tick { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 auto; border-radius: 7px; border: 1.5px solid #E4E2DB; background: #fff; font-size: 12px; }
 .week-tick.done { border-color: transparent; background: var(--success-tint); color: var(--success); font-weight: 900; }
 .person-cell-val { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.person-cell-val.empty { color: #A9ADBB; font-weight: 600; }
 .list-empty { text-align: center; padding: 32px 12px; color: #A9ADBB; font-size: 14px; font-weight: 600; }
 
 .univ-msg-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; padding: 16px; font-size: 15px; font-weight: 700; color: #fff; background: var(--univ); border: none; border-radius: 14px; box-shadow: 0 12px 22px -14px rgba(224,123,44,.7); }
