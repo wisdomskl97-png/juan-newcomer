@@ -464,7 +464,7 @@
     var u = t.filter(function (p) { return p.flow === 'univ'; }).length;
     var s = '[주안교회 새가족 등록 요약]\n' + activeDateLabel() + '\n총 ' + t.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n';
     t.forEach(function (p, i) {
-      s += '\n' + (i + 1) + '. ' + p.name + ' (' + (p.year || '—') + '년생) · ' + (p.flow === 'univ' ? '대학목장' : '일반목장') + '\n';
+      s += '\n' + (i + 1) + '. ' + p.name + ' · ' + (p.flow === 'univ' ? '대학목장' : '일반목장') + '\n';
       if (p.info) {
         s += line('연락처', p.info.contact) + line('카카오톡', p.info.kakao) + line('생년월일', p.info.birth) + line('비자', p.info.visa) + line('전공', p.info.major) + line('인도자', p.info.leader) + line('세례여부', p.info.baptism) + line('이전출석교회', p.info.prevChurch) + line('이전봉사부서', p.info.prevDept);
       }
