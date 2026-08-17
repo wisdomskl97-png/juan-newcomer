@@ -483,6 +483,56 @@
     return applyArchiveSort(archiveByDateAsc().filter(function (p) { return cellKeyOf(p) === cellName; }));
   }
 
+  // Whether there's a concrete list of people to render at all right now
+  // (as opposed to a picker screen like "달을 선택하세요").
+  function archiveHasList() {
+    var s = state;
+    if (isSearching() || s.viewMode === 'today') return true;
+    if (s.viewMode !== 'archive') return false;
+    if (s.archiveDisplay === 'monthly') return !!s.archiveDate;
+    if (s.archiveDisplay === 'fullList') return true;
+    if (s.archiveDisplay === 'byCell') return !!s.archiveCell;
+    return false;
+  }
+
+  // Whether the interactive 총등록/일반목장/대학목장 filter cards should
+  // show. Only for a genuinely single date-or-cell list (오늘/검색/특정
+  // 주일/특정 셀) — not 전체 목록, which spans every date and just shows
+  // a plain total instead, matching the 월별/셀별 picker screens.
+  function archiveShowCards() {
+    var s = state;
+    if (isSearching() || s.viewMode === 'today') return true;
+    if (s.viewMode !== 'archive') return false;
+    if (s.archiveDisplay === 'monthly') return !!s.archiveDate;
+    if (s.archiveDisplay === 'byCell') return !!s.archiveCell;
+    return false;
+  }
+
+  // Whether the plain "총 N · 일반 N · 대학 N" text next to the
+  // "등록 요약" title should show — every 지난 기록 screen that isn't
+  // already showing its own real stats via archiveShowCards(), so the
+  // header always has the same totals line no matter which of
+  // 월별/전체 목록/셀별 is active.
+  function archiveShowGrandTotal() {
+    var s = state;
+    if (isSearching() || s.viewMode !== 'archive') return false;
+    if (s.archiveDisplay === 'monthly') return !s.archiveDate;
+    if (s.archiveDisplay === 'fullList') return true;
+    if (s.archiveDisplay === 'byCell') return !s.archiveCell;
+    return false;
+  }
+
+  // Whether the 월별/전체 목록/셀별 toggle itself should show — only at
+  // the true top of 지난 기록, before any month/cell has been picked.
+  function archiveShowToggle() {
+    var s = state;
+    if (isSearching() || s.viewMode !== 'archive') return false;
+    if (s.archiveDisplay === 'monthly') return !s.archiveMonth;
+    if (s.archiveDisplay === 'fullList') return true;
+    if (s.archiveDisplay === 'byCell') return !s.archiveCell;
+    return false;
+  }
+
   function archiveTotals() {
     var all = [];
     state.archive.forEach(function (g) { all = all.concat(g.people); });
@@ -889,7 +939,7 @@
     // has nothing else next to the title — show all-time totals there so
     // that space isn't just empty. Once a week/오늘/검색 has real stats
     // showing below, the per-date stat cards already cover this.
-    if (!isSearching() && s.viewMode === 'archive' && !s.archiveDate && s.archiveDisplay === 'monthly') {
+    if (archiveShowGrandTotal()) {
       var grandTotals = archiveTotals();
       html += '<span class="summary-title-total">총 ' + grandTotals.total + ' · 일반 ' + grandTotals.general + ' · 대학 ' + grandTotals.univ + '</span>';
     }
@@ -913,7 +963,8 @@
   function renderSummaryStats() {
     var s = state;
     var searching = isSearching();
-    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && (!!s.archiveDate || s.archiveDisplay === 'fullList' || (s.archiveDisplay === 'byCell' && !!s.archiveCell)));
+    var hasList = archiveHasList();
+    var showCards = archiveShowCards();
     var people = activeList();
     var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
     var totalCount = people.length;
@@ -922,10 +973,11 @@
 
     var html = '';
     var subLabel = searching ? '검색 결과 · ' + filtered.length + '건'
-      : showStats ? activeDateLabel()
-      : (s.viewMode === 'archive' && s.archiveMonth ? '주일을 선택하세요' : '달을 선택하세요');
+      : hasList ? activeDateLabel()
+      : (s.viewMode === 'archive' && s.archiveDisplay === 'byCell' ? '셀을 선택하세요'
+        : (s.viewMode === 'archive' && s.archiveMonth ? '주일을 선택하세요' : '달을 선택하세요'));
     html += '<p class="sub">' + esc(subLabel) + '</p>';
-    if (showStats) {
+    if (showCards) {
       html += '<div class="stat-row">';
       html += '<button class="stat-card" data-action="setFilterAll"><div class="stat-num">' + totalCount + '</div><div class="stat-label">총 등록</div>' + (s.summaryFilter === 'all' ? '<div class="stat-line all"></div>' : '') + '</button>';
       html += '<button class="stat-card" data-action="setFilterGeneral"><div class="stat-num general">' + generalCount + '</div><div class="stat-label">일반목장</div>' + (s.summaryFilter === 'general' ? '<div class="stat-line general"></div>' : '') + '</button>';
@@ -938,9 +990,9 @@
   function renderSummaryList() {
     var s = state;
     var searching = isSearching();
-    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && (!!s.archiveDate || s.archiveDisplay === 'fullList' || (s.archiveDisplay === 'byCell' && !!s.archiveCell)));
+    var hasList = archiveHasList();
     var people = activeList();
-    var editable = showStats;
+    var editable = hasList;
     var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
 
     if (s.summaryLoading) return '<div class="list-empty">불러오는 중… · Loading…</div>';
@@ -949,14 +1001,8 @@
         '<button class="back-chip" data-action="reloadSummary" style="margin-top:10px">다시 시도 · Retry</button>';
     }
 
-    var archiveAtTop = !searching && s.viewMode === 'archive' && (
-      (s.archiveDisplay === 'monthly' && !s.archiveMonth) ||
-      s.archiveDisplay === 'fullList' ||
-      (s.archiveDisplay === 'byCell' && !s.archiveCell)
-    );
-
     var html = '';
-    if (archiveAtTop) {
+    if (archiveShowToggle()) {
       html += renderArchiveDisplayToggle();
     }
     if (!searching && s.viewMode === 'archive' && s.archiveDisplay === 'monthly' && !s.archiveMonth) {
@@ -992,7 +1038,7 @@
       html += renderArchiveSortToggle();
     }
 
-    if (showStats) {
+    if (hasList) {
       if (!searching && s.viewMode === 'archive' && s.archiveDate) {
         html += '<button class="back-chip" data-action="backToWeeks">← 주일 다시 선택</button>';
       }
