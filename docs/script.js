@@ -461,10 +461,11 @@
     return ((p.info && p.info.cellGroup) || '').trim() || '미배정';
   }
 
-  // One row per managed cell (state.cellOptions) plus a trailing 미배정
-  // bucket, each with how many past registrants belong to it. Any legacy
-  // cell name found in the data but no longer in state.cellOptions still
-  // gets its own row, so nobody silently disappears from the picker.
+  // One row per managed cell (state.cellOptions), 가나다순, plus a
+  // trailing 미배정 bucket always last, each with how many past
+  // registrants belong to it. Any legacy cell name found in the data but
+  // no longer in state.cellOptions still gets its own row, so nobody
+  // silently disappears from the picker.
   function archiveCellBuckets() {
     var all = archiveByDateAsc();
     var counts = {};
@@ -473,6 +474,7 @@
     var names = [];
     state.cellOptions.forEach(function (c) { if (!seen[c]) { seen[c] = true; names.push(c); } });
     Object.keys(counts).forEach(function (c) { if (c !== '미배정' && !seen[c]) { seen[c] = true; names.push(c); } });
+    names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
     names.push('미배정');
     return names.map(function (name) { return { name: name, count: counts[name] || 0 }; });
   }
