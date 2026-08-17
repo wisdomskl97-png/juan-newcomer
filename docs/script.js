@@ -19,6 +19,7 @@
     showSummaryPreview: false,
     summaryFilter: 'all',
     editIndex: null,
+    editMode: 'view',
     editDraft: {},
     editOriginal: '',
     showDiscard: false,
@@ -433,6 +434,7 @@
     };
     update(function () {
       state.editIndex = i; state.editDraft = draft; state.editOriginal = JSON.stringify(draft);
+      state.editMode = 'view'; // open read-only first — an accidental tap shouldn't drop them straight into an editable form
       state.showDiscard = false; state.editDeleteArm = false; state.editSaving = false; state.editSaveError = '';
     });
   }
@@ -481,6 +483,10 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
+  }
+
+  function viewRow(label, value) {
+    return '<div class="edit-field"><label class="edit-label">' + label + '</label><div class="view-value">' + (value ? esc(value) : '<span class="view-empty">—</span>') + '</div></div>';
   }
 
   function fieldHtml(opts) {
@@ -859,42 +865,62 @@
     if (state.editIndex === null) return '';
     var d = state.editDraft;
     var isGeneral = d.flow !== 'univ';
+    var isEdit = state.editMode === 'edit';
     var html = '<div class="overlay ' + enter + '" data-overlay="edit"><div class="sheet edit-sheet">';
-    html += '<div class="sheet-head" style="margin-bottom:16px"><button class="btn-pill" data-action="requestClose">← 뒤로</button><h3>등록 정보 수정</h3></div>';
-    html += '<label class="edit-label">목장 구분</label>';
-    html += '<div class="edit-flow-toggle">';
-    html += '<button type="button" class="edit-flow-btn ' + (isGeneral ? 'active-general' : '') + '" data-action="setEditFlowGeneral">일반목장</button>';
-    html += '<button type="button" class="edit-flow-btn ' + (!isGeneral ? 'active-univ' : '') + '" data-action="setEditFlowUniv">대학목장</button>';
-    html += '</div>';
+    html += '<div class="sheet-head" style="margin-bottom:16px"><button class="btn-pill" data-action="requestClose">← 뒤로</button><h3>' + (isEdit ? '등록 정보 수정' : '등록 정보') + '</h3></div>';
 
-    function ef(field, label, type) {
-      type = type || 'text';
-      return '<div class="edit-field"><label class="edit-label">' + label + '</label><input id="editDraft-' + field + '" type="' + type + '" data-context="editDraft" data-field="' + field + '" value="' + esc(d[field]) + '" /></div>';
+    if (!isEdit) {
+      html += viewRow('목장 구분', isGeneral ? '일반목장' : '대학목장');
+      html += viewRow('이름 / Name', d.name);
+      html += viewRow('태어난 해', d.year);
+      html += '<div class="edit-divider"></div><p class="edit-detail-label">상세 정보</p>';
+      html += viewRow('연락처 / Contact', d.contact);
+      html += viewRow('카카오톡 ID', d.kakao);
+      html += viewRow('생년월일', d.birth);
+      html += viewRow('비자 종류', d.visa);
+      html += viewRow('전공 / 직업', d.major);
+      html += viewRow('인도자', d.leader);
+      html += viewRow('세례 여부', d.baptism);
+      html += viewRow('이전 출석교회', d.prevChurch);
+      html += viewRow('이전 봉사부서', d.prevDept);
+      html += '<button class="save-btn" data-action="enterEditMode">✎ 정보 수정하기 · Edit</button>';
+    } else {
+      html += '<label class="edit-label">목장 구분</label>';
+      html += '<div class="edit-flow-toggle">';
+      html += '<button type="button" class="edit-flow-btn ' + (isGeneral ? 'active-general' : '') + '" data-action="setEditFlowGeneral">일반목장</button>';
+      html += '<button type="button" class="edit-flow-btn ' + (!isGeneral ? 'active-univ' : '') + '" data-action="setEditFlowUniv">대학목장</button>';
+      html += '</div>';
+
+      var ef = function (field, label, type) {
+        type = type || 'text';
+        return '<div class="edit-field"><label class="edit-label">' + label + '</label><input id="editDraft-' + field + '" type="' + type + '" data-context="editDraft" data-field="' + field + '" value="' + esc(d[field]) + '" /></div>';
+      };
+
+      html += ef('name', '이름 / Name');
+      html += ef('year', '태어난 해', 'text');
+      html += '<div class="edit-divider"></div><p class="edit-detail-label">상세 정보</p>';
+      html += ef('contact', '연락처 / Contact', 'tel');
+      html += '<div class="field-row">';
+      html += '<div class="edit-field" style="flex:1"><label class="edit-label">카카오톡 ID</label><input id="editDraft-kakao" type="text" data-context="editDraft" data-field="kakao" value="' + esc(d.kakao) + '" /></div>';
+      html += '<div class="edit-field" style="flex:1"><label class="edit-label">생년월일</label><input id="editDraft-birth" type="text" inputMode="numeric" placeholder="YYYY-MM-DD" data-context="editDraft" data-field="birth" value="' + esc(d.birth) + '" /></div>';
+      html += '</div>';
+      html += '<div class="field-row">';
+      html += '<div class="edit-field" style="flex:1"><label class="edit-label">비자 종류</label><input id="editDraft-visa" type="text" data-context="editDraft" data-field="visa" value="' + esc(d.visa) + '" /></div>';
+      html += '<div class="edit-field" style="flex:1"><label class="edit-label">전공 / 직업</label><input id="editDraft-major" type="text" data-context="editDraft" data-field="major" value="' + esc(d.major) + '" /></div>';
+      html += '</div>';
+      html += ef('leader', '인도자');
+      html += '<div class="edit-field"><label class="edit-label">세례 여부</label><select id="editDraft-baptism" data-context="editDraft" data-field="baptism">' +
+        BAPTISM_OPTIONS.map(function (o) { return '<option value="' + esc(o.value) + '"' + (o.value === d.baptism ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('') +
+        '</select></div>';
+      html += ef('prevChurch', '이전 출석교회');
+      html += ef('prevDept', '이전 봉사부서');
+
+      if (state.editSaveError) {
+        html += '<div class="error-msg" style="margin-top:14px"><span class="error-dot">!</span>' + esc(state.editSaveError) + '</div>';
+      }
+      html += '<button class="save-btn" data-action="saveEdit"' + (state.editSaving ? ' disabled' : '') + '>' + (state.editSaving ? '저장 중… · Saving' : '저장하기 · Save') + '</button>';
+      html += '<button class="btn-ghost" style="width:100%;margin-top:6px" data-action="exitEditMode"' + (state.editSaving ? ' disabled' : '') + '>취소하고 보기로 돌아가기</button>';
     }
-
-    html += ef('name', '이름 / Name');
-    html += ef('year', '태어난 해', 'text');
-    html += '<div class="edit-divider"></div><p class="edit-detail-label">상세 정보</p>';
-    html += ef('contact', '연락처 / Contact', 'tel');
-    html += '<div class="field-row">';
-    html += '<div class="edit-field" style="flex:1"><label class="edit-label">카카오톡 ID</label><input id="editDraft-kakao" type="text" data-context="editDraft" data-field="kakao" value="' + esc(d.kakao) + '" /></div>';
-    html += '<div class="edit-field" style="flex:1"><label class="edit-label">생년월일</label><input id="editDraft-birth" type="text" inputMode="numeric" placeholder="YYYY-MM-DD" data-context="editDraft" data-field="birth" value="' + esc(d.birth) + '" /></div>';
-    html += '</div>';
-    html += '<div class="field-row">';
-    html += '<div class="edit-field" style="flex:1"><label class="edit-label">비자 종류</label><input id="editDraft-visa" type="text" data-context="editDraft" data-field="visa" value="' + esc(d.visa) + '" /></div>';
-    html += '<div class="edit-field" style="flex:1"><label class="edit-label">전공 / 직업</label><input id="editDraft-major" type="text" data-context="editDraft" data-field="major" value="' + esc(d.major) + '" /></div>';
-    html += '</div>';
-    html += ef('leader', '인도자');
-    html += '<div class="edit-field"><label class="edit-label">세례 여부</label><select id="editDraft-baptism" data-context="editDraft" data-field="baptism">' +
-      BAPTISM_OPTIONS.map(function (o) { return '<option value="' + esc(o.value) + '"' + (o.value === d.baptism ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('') +
-      '</select></div>';
-    html += ef('prevChurch', '이전 출석교회');
-    html += ef('prevDept', '이전 봉사부서');
-
-    if (state.editSaveError) {
-      html += '<div class="error-msg" style="margin-top:14px"><span class="error-dot">!</span>' + esc(state.editSaveError) + '</div>';
-    }
-    html += '<button class="save-btn" data-action="saveEdit"' + (state.editSaving ? ' disabled' : '') + '>' + (state.editSaving ? '저장 중… · Saving' : '저장하기 · Save') + '</button>';
 
     html += '<div class="delete-zone">';
     if (!state.editDeleteArm) {
@@ -992,6 +1018,8 @@
     setFilterUniv: function () { update(function () { state.summaryFilter = state.summaryFilter === 'univ' ? 'all' : 'univ'; }); },
     startEdit: function (el) { startEdit(Number(el.getAttribute('data-index'))); },
     requestClose: requestClose,
+    enterEditMode: function () { update(function () { state.editMode = 'edit'; }); },
+    exitEditMode: function () { update(function () { state.editDraft = JSON.parse(state.editOriginal); state.editMode = 'view'; }); },
     setEditFlowGeneral: function () { update(function () { state.editDraft.flow = 'general'; }); },
     setEditFlowUniv: function () { update(function () { state.editDraft.flow = 'univ'; }); },
     saveEdit: saveEdit,
