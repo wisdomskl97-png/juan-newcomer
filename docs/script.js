@@ -760,23 +760,27 @@
       '<button type="button" id="searchClearBtn" class="search-clear" data-action="clearSearch" style="visibility:' + (s.searchQuery ? 'visible' : 'hidden') + '">✕</button>' +
       '</div>';
     html += '<h2>등록 요약</h2>';
+    html += '<div id="summaryStats">' + renderSummaryStats() + '</div>';
     html += '</div>';
-    html += '<div class="summary-body" id="summaryResults">' + renderSummaryBody() + '</div>';
+    html += '<div class="summary-body" id="summaryResults">' + renderSummaryList() + '</div>';
     html += '</div>';
     return html;
   }
 
   // Split out from renderSummary() so the search box can trigger a
-  // targeted refresh of just this part (see the 'search' context branch
-  // in the input handler) — replacing the whole screen on every keystroke
-  // would tear down and rebuild the search <input> itself mid-keystroke,
-  // breaking Korean IME composition the same way it did everywhere else.
-  function renderSummaryBody() {
+  // targeted refresh of these two parts (see the 'search' context branch
+  // in the input handler) without touching the search <input> itself —
+  // a full render() would destroy/recreate it mid-keystroke and break
+  // Korean IME composition, same class of bug fixed elsewhere. Two
+  // separate containers (not one) because the date/stat-card line lives
+  // on the dark header background and the list lives on the white body
+  // background — merging them into a single container would put white
+  // background under the date/stats, same visual bug this replaced.
+  function renderSummaryStats() {
     var s = state;
     var searching = isSearching();
     var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
     var people = activeList();
-    var editable = showStats;
     var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
     var totalCount = people.length;
     var generalCount = people.filter(function (p) { return p.flow === 'general'; }).length;
@@ -794,13 +798,24 @@
       html += '<button class="stat-card" data-action="setFilterUniv"><div class="stat-num univ">' + univCount + '</div><div class="stat-label">대학목장</div>' + (s.summaryFilter === 'univ' ? '<div class="stat-line univ"></div>' : '') + '</button>';
       html += '</div><p class="stat-hint">카드를 눌러 목장별로 필터링하세요 · Tap a card to filter</p>';
     }
+    return html;
+  }
 
-    if (s.summaryLoading) return html + '<div class="list-empty">불러오는 중… · Loading…</div>';
+  function renderSummaryList() {
+    var s = state;
+    var searching = isSearching();
+    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
+    var people = activeList();
+    var editable = showStats;
+    var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
+
+    if (s.summaryLoading) return '<div class="list-empty">불러오는 중… · Loading…</div>';
     if (s.summaryLoadError) {
-      return html + '<div class="list-empty">' + esc(s.summaryLoadError) + '</div>' +
+      return '<div class="list-empty">' + esc(s.summaryLoadError) + '</div>' +
         '<button class="back-chip" data-action="reloadSummary" style="margin-top:10px">다시 시도 · Retry</button>';
     }
 
+    var html = '';
     if (!searching && s.viewMode === 'archive' && !s.archiveMonth) {
       var months = uniqueMonths();
       html += '<p class="picker-title">달을 선택하세요</p>';
@@ -1138,10 +1153,12 @@
       // The list needs to update live as they type, but a full render()
       // would destroy/recreate this very <input> mid-keystroke and break
       // IME composition — same issue text fields had everywhere else.
-      // Only re-render the results subtree, leaving the input alone.
+      // Only re-render the two results subtrees, leaving the input alone.
       state.searchQuery = value;
+      var statsEl = document.getElementById('summaryStats');
+      if (statsEl) statsEl.innerHTML = renderSummaryStats();
       var resultsEl = document.getElementById('summaryResults');
-      if (resultsEl) resultsEl.innerHTML = renderSummaryBody();
+      if (resultsEl) resultsEl.innerHTML = renderSummaryList();
       var clearBtn = document.getElementById('searchClearBtn');
       if (clearBtn) clearBtn.style.visibility = value ? 'visible' : 'hidden';
       return;
