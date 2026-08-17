@@ -42,6 +42,8 @@
     viewMode: 'today',
     archiveMonth: null,
     archiveDate: null,
+    archiveDisplay: 'monthly',
+    archiveSort: 'date',
     archive: []
   };
 
@@ -425,8 +427,23 @@
   function activeList() {
     if (isSearching()) return searchMatches();
     if (state.viewMode === 'today') return state.today;
+    if (state.archiveDisplay === 'fullList') return archiveFullList();
     var sess = state.archive.filter(function (x) { return x.date === state.archiveDate; })[0];
     return sess ? sess.people : [];
+  }
+
+  // Flat list of every past registrant, spanning all dates. Default order
+  // is earliest -> latest registration (state.archive itself is sorted
+  // newest-first for the month/week picker, so this re-sorts ascending);
+  // the small sort toggle switches to 가나다 (name) order instead.
+  function archiveFullList() {
+    var byDateAsc = state.archive.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    var all = [];
+    byDateAsc.forEach(function (g) { all = all.concat(g.people); });
+    if (state.archiveSort === 'name') {
+      all = all.slice().sort(function (a, b) { return (a.name || '').localeCompare(b.name || '', 'ko'); });
+    }
+    return all;
   }
 
   function archiveTotals() {
@@ -479,6 +496,7 @@
   }
   function activeDateLabel() {
     if (state.viewMode === 'today') return todayLabel();
+    if (state.viewMode === 'archive' && state.archiveDisplay === 'fullList') return '전체 등록자';
     if (!state.archiveDate) return '';
     var parts = state.archiveDate.split('-').map(Number);
     return parts[0] + '년 ' + parts[1] + '월 ' + parts[2] + '일';
@@ -833,7 +851,7 @@
     // has nothing else next to the title — show all-time totals there so
     // that space isn't just empty. Once a week/오늘/검색 has real stats
     // showing below, the per-date stat cards already cover this.
-    if (!isSearching() && s.viewMode === 'archive' && !s.archiveDate) {
+    if (!isSearching() && s.viewMode === 'archive' && !s.archiveDate && s.archiveDisplay !== 'fullList') {
       var grandTotals = archiveTotals();
       html += '<span class="summary-title-total">총 ' + grandTotals.total + ' · 일반 ' + grandTotals.general + ' · 대학 ' + grandTotals.univ + '</span>';
     }
@@ -857,7 +875,7 @@
   function renderSummaryStats() {
     var s = state;
     var searching = isSearching();
-    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
+    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && (!!s.archiveDate || s.archiveDisplay === 'fullList'));
     var people = activeList();
     var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
     var totalCount = people.length;
@@ -882,7 +900,7 @@
   function renderSummaryList() {
     var s = state;
     var searching = isSearching();
-    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
+    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && (!!s.archiveDate || s.archiveDisplay === 'fullList'));
     var people = activeList();
     var editable = showStats;
     var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
@@ -895,6 +913,9 @@
 
     var html = '';
     if (!searching && s.viewMode === 'archive' && !s.archiveMonth) {
+      html += renderArchiveDisplayToggle();
+    }
+    if (!searching && s.viewMode === 'archive' && s.archiveDisplay === 'monthly' && !s.archiveMonth) {
       var months = uniqueMonths();
       html += '<p class="picker-title">달을 선택하세요</p>';
       html += '<div class="archive-year">' + archiveYearLabel(months) + '</div>';
@@ -903,6 +924,8 @@
         html += '<button class="month-chip" data-action="pickMonth" data-key="' + esc(k) + '">' + Number(k.slice(5, 7)) + '월</button>';
       });
       html += '</div>';
+    } else if (!searching && s.viewMode === 'archive' && s.archiveDisplay === 'fullList') {
+      html += renderArchiveSortToggle();
     } else if (!searching && s.viewMode === 'archive' && s.archiveMonth && !s.archiveDate) {
       var weeks = s.archive.filter(function (x) { return x.date.slice(0, 7) === s.archiveMonth; });
       html += '<button class="back-chip" data-action="backToMonths">← 달 다시 선택</button>';
@@ -926,7 +949,7 @@
         var realIndex = people.indexOf(p);
         var initial = (p.name || '?').trim().charAt(0);
         var yearLabel = p.year ? p.year + '년생' : '출생연도 미입력';
-        if (searching) {
+        if (searching || (s.viewMode === 'archive' && s.archiveDisplay === 'fullList')) {
           var dateLabel = shortDateLabel(dateForPerson(p));
           yearLabel += dateLabel ? ' · ' + dateLabel + ' 등록' : '';
         }
@@ -950,6 +973,19 @@
     }
 
     return html;
+  }
+
+  function renderArchiveDisplayToggle() {
+    var s = state;
+    return '<div class="archive-display-toggle">' +
+      '<button type="button" class="archive-display-btn' + (s.archiveDisplay === 'monthly' ? ' active' : '') + '" data-action="setArchiveDisplayMonthly">📅 월별로 보기</button>' +
+      '<button type="button" class="archive-display-btn' + (s.archiveDisplay === 'fullList' ? ' active' : '') + '" data-action="setArchiveDisplayFullList">📋 전체 목록</button>' +
+      '</div>';
+  }
+  function renderArchiveSortToggle() {
+    var isName = state.archiveSort === 'name';
+    return '<div class="archive-sort-row"><button type="button" class="archive-sort-btn" data-action="toggleArchiveSort">' +
+      (isName ? '📅 등록일순으로 보기' : '가나다순으로 보기') + '</button></div>';
   }
 
   function uniqueMonths() {
@@ -1218,6 +1254,9 @@
     pickWeek: function (el) { update(function () { state.archiveDate = el.getAttribute('data-date'); state.summaryFilter = 'all'; }); },
     backToMonths: function () { update(function () { state.archiveMonth = null; state.archiveDate = null; }); },
     backToWeeks: function () { update(function () { state.archiveDate = null; state.summaryFilter = 'all'; }); },
+    setArchiveDisplayMonthly: function () { update(function () { state.archiveDisplay = 'monthly'; state.summaryFilter = 'all'; }); },
+    setArchiveDisplayFullList: function () { update(function () { state.archiveDisplay = 'fullList'; state.archiveMonth = null; state.archiveDate = null; state.summaryFilter = 'all'; }); },
+    toggleArchiveSort: function () { update(function () { state.archiveSort = state.archiveSort === 'date' ? 'name' : 'date'; }); },
     setFilterAll: function () { update(function () { state.summaryFilter = 'all'; }); },
     setFilterGeneral: function () { update(function () { state.summaryFilter = state.summaryFilter === 'general' ? 'all' : 'general'; }); },
     setFilterUniv: function () { update(function () { state.summaryFilter = state.summaryFilter === 'univ' ? 'all' : 'univ'; }); },
