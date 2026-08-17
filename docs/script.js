@@ -18,6 +18,7 @@
     showUnivMsg: false,
     showSummaryPreview: false,
     summaryFilter: 'all',
+    searchQuery: '',
     editIndex: null,
     editMode: 'view',
     editDraft: {},
@@ -370,9 +371,45 @@
   }
 
   function activeList() {
+    if (isSearching()) return searchMatches();
     if (state.viewMode === 'today') return state.today;
     var sess = state.archive.filter(function (x) { return x.date === state.archiveDate; })[0];
     return sess ? sess.people : [];
+  }
+
+  function isSearching() {
+    return !!(state.searchQuery && state.searchQuery.trim());
+  }
+
+  // Search spans every date, not just whatever tab/week is currently
+  // selected — state.archive already holds everyone grouped by date, so
+  // flatten it rather than restricting to the active tab.
+  function searchMatches() {
+    var q = state.searchQuery.trim().toLowerCase();
+    var qDigits = q.replace(/\D/g, '');
+    var out = [];
+    state.archive.forEach(function (group) {
+      group.people.forEach(function (p) {
+        var nameMatch = p.name && p.name.toLowerCase().indexOf(q) !== -1;
+        var contact = p.info && p.info.contact ? String(p.info.contact).replace(/\D/g, '') : '';
+        var contactMatch = qDigits.length >= 3 && contact.indexOf(qDigits) !== -1;
+        if (nameMatch || contactMatch) out.push(p);
+      });
+    });
+    return out;
+  }
+
+  function dateForPerson(p) {
+    for (var i = 0; i < state.archive.length; i++) {
+      if (state.archive[i].people.indexOf(p) !== -1) return state.archive[i].date;
+    }
+    return '';
+  }
+
+  function shortDateLabel(dateStr) {
+    var parts = String(dateStr || '').split('-').map(Number);
+    if (parts.length !== 3 || !parts[1] || !parts[2]) return '';
+    return parts[1] + '월 ' + parts[2] + '일';
   }
   function todayLabel() {
     var d = currentServiceSunday();
@@ -703,14 +740,6 @@
 
   function renderSummary(enter) {
     var s = state;
-    var showStats = s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
-    var people = activeList();
-    var editable = showStats; // an actual people list is showing (today, or a picked archive week) — not the month/week picker itself
-    var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
-    var totalCount = people.length;
-    var generalCount = people.filter(function (p) { return p.flow === 'general'; }).length;
-    var univCount = people.filter(function (p) { return p.flow === 'univ'; }).length;
-
     var html = '<div class="screen ' + enter + '" style="padding:0">';
     html += '<div class="summary-head">';
     html += '<div class="summary-head-row"><span class="label">팀원용 · TEAM ONLY</span><div style="display:flex;gap:8px">' +
@@ -721,8 +750,43 @@
     html += '<button class="summary-tab ' + (s.viewMode === 'today' ? 'active' : '') + '" data-action="setViewToday">오늘</button>';
     html += '<button class="summary-tab ' + (s.viewMode === 'archive' ? 'active' : '') + '" data-action="setViewArchive">지난 기록</button>';
     html += '</div>';
+    html += '<div class="search-row">' +
+      '<span class="search-icon">🔍</span>' +
+      '<input id="search-searchQuery" type="text" inputMode="search" data-context="search" data-field="searchQuery" placeholder="이름 또는 연락처로 검색" value="' + esc(s.searchQuery) + '" />' +
+      // Always rendered (not conditional on searchQuery) — the search input
+      // triggers a targeted re-render of just #summaryResults to protect
+      // IME composition, which can't reach this button to add/remove it,
+      // so its visibility is toggled directly from that same input handler.
+      '<button type="button" id="searchClearBtn" class="search-clear" data-action="clearSearch" style="visibility:' + (s.searchQuery ? 'visible' : 'hidden') + '">✕</button>' +
+      '</div>';
     html += '<h2>등록 요약</h2>';
-    html += '<p class="sub">' + esc(showStats ? activeDateLabel() : (s.viewMode === 'archive' && s.archiveMonth ? '주일을 선택하세요' : '달을 선택하세요')) + '</p>';
+    html += '</div>';
+    html += '<div class="summary-body" id="summaryResults">' + renderSummaryBody() + '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  // Split out from renderSummary() so the search box can trigger a
+  // targeted refresh of just this part (see the 'search' context branch
+  // in the input handler) — replacing the whole screen on every keystroke
+  // would tear down and rebuild the search <input> itself mid-keystroke,
+  // breaking Korean IME composition the same way it did everywhere else.
+  function renderSummaryBody() {
+    var s = state;
+    var searching = isSearching();
+    var showStats = searching || s.viewMode === 'today' || (s.viewMode === 'archive' && !!s.archiveDate);
+    var people = activeList();
+    var editable = showStats;
+    var filtered = people.filter(function (p) { return s.summaryFilter === 'all' || (s.summaryFilter === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
+    var totalCount = people.length;
+    var generalCount = people.filter(function (p) { return p.flow === 'general'; }).length;
+    var univCount = people.filter(function (p) { return p.flow === 'univ'; }).length;
+
+    var html = '';
+    var subLabel = searching ? '검색 결과 · ' + filtered.length + '건'
+      : showStats ? activeDateLabel()
+      : (s.viewMode === 'archive' && s.archiveMonth ? '주일을 선택하세요' : '달을 선택하세요');
+    html += '<p class="sub">' + esc(subLabel) + '</p>';
     if (showStats) {
       html += '<div class="stat-row">';
       html += '<button class="stat-card" data-action="setFilterAll"><div class="stat-num">' + totalCount + '</div><div class="stat-label">총 등록</div>' + (s.summaryFilter === 'all' ? '<div class="stat-line all"></div>' : '') + '</button>';
@@ -730,22 +794,14 @@
       html += '<button class="stat-card" data-action="setFilterUniv"><div class="stat-num univ">' + univCount + '</div><div class="stat-label">대학목장</div>' + (s.summaryFilter === 'univ' ? '<div class="stat-line univ"></div>' : '') + '</button>';
       html += '</div><p class="stat-hint">카드를 눌러 목장별로 필터링하세요 · Tap a card to filter</p>';
     }
-    html += '</div>';
 
-    html += '<div class="summary-body">';
-
-    if (s.summaryLoading) {
-      html += '<div class="list-empty">불러오는 중… · Loading…</div></div></div>';
-      return html;
-    }
+    if (s.summaryLoading) return html + '<div class="list-empty">불러오는 중… · Loading…</div>';
     if (s.summaryLoadError) {
-      html += '<div class="list-empty">' + esc(s.summaryLoadError) + '</div>';
-      html += '<button class="back-chip" data-action="reloadSummary" style="margin-top:10px">다시 시도 · Retry</button>';
-      html += '</div></div>';
-      return html;
+      return html + '<div class="list-empty">' + esc(s.summaryLoadError) + '</div>' +
+        '<button class="back-chip" data-action="reloadSummary" style="margin-top:10px">다시 시도 · Retry</button>';
     }
 
-    if (s.viewMode === 'archive' && !s.archiveMonth) {
+    if (!searching && s.viewMode === 'archive' && !s.archiveMonth) {
       var months = uniqueMonths();
       html += '<p class="picker-title">달을 선택하세요</p>';
       html += '<div class="archive-year">' + archiveYearLabel(months) + '</div>';
@@ -754,7 +810,7 @@
         html += '<button class="month-chip" data-action="pickMonth" data-key="' + esc(k) + '">' + Number(k.slice(5, 7)) + '월</button>';
       });
       html += '</div>';
-    } else if (s.viewMode === 'archive' && s.archiveMonth && !s.archiveDate) {
+    } else if (!searching && s.viewMode === 'archive' && s.archiveMonth && !s.archiveDate) {
       var weeks = s.archive.filter(function (x) { return x.date.slice(0, 7) === s.archiveMonth; });
       html += '<button class="back-chip" data-action="backToMonths">← 달 다시 선택</button>';
       html += '<p class="picker-title">주일을 선택하세요</p><div class="week-list">';
@@ -766,17 +822,21 @@
     }
 
     if (showStats) {
-      if (s.viewMode === 'archive' && s.archiveDate) {
+      if (!searching && s.viewMode === 'archive' && s.archiveDate) {
         html += '<button class="back-chip" data-action="backToWeeks">← 주일 다시 선택</button>';
       }
       html += '<div class="people-list">';
       if (!filtered.length) {
-        html += '<div class="list-empty">해당 목장에 등록된 새가족이 없습니다.</div>';
+        html += '<div class="list-empty">' + (searching ? '‘' + esc(s.searchQuery.trim()) + '’에 해당하는 등록자가 없습니다.' : '해당 목장에 등록된 새가족이 없습니다.') + '</div>';
       }
       filtered.forEach(function (p) {
         var realIndex = people.indexOf(p);
         var initial = (p.name || '?').trim().charAt(0);
         var yearLabel = p.year ? p.year + '년생' : '출생연도 미입력';
+        if (searching) {
+          var dateLabel = shortDateLabel(dateForPerson(p));
+          yearLabel += dateLabel ? ' · ' + dateLabel + ' 등록' : '';
+        }
         var tag = p.flow === 'univ' ? '<span class="tag tag-univ">대학</span>' : '<span class="tag tag-general">일반</span>';
         var chev = editable ? '<span class="chev">›</span>' : '';
         var action = editable ? ' data-action="startEdit" data-index="' + realIndex + '"' : '';
@@ -787,14 +847,15 @@
       });
       html += '</div>';
 
-      var hasUnivToday = people.some(function (p) { return p.flow === 'univ'; }) && s.summaryFilter !== 'general';
-      if (hasUnivToday) {
-        html += '<button class="univ-msg-btn" data-action="openUnivMsg">🎓 대학목장 전달 메시지 만들기</button>';
+      if (!searching) {
+        var hasUnivToday = people.some(function (p) { return p.flow === 'univ'; }) && s.summaryFilter !== 'general';
+        if (hasUnivToday) {
+          html += '<button class="univ-msg-btn" data-action="openUnivMsg">🎓 대학목장 전달 메시지 만들기</button>';
+        }
+        html += '<button class="act-primary act-full" data-action="openSummaryPreview">' + (s.viewMode === 'today' ? '오늘 등록 요약 보기' : '등록 요약 보기') + '</button>';
       }
-      html += '<button class="act-primary act-full" data-action="openSummaryPreview">' + (s.viewMode === 'today' ? '오늘 등록 요약 보기' : '등록 요약 보기') + '</button>';
     }
 
-    html += '</div></div>';
     return html;
   }
 
@@ -1007,8 +1068,9 @@
     pinCancel: function () { update(function () { state.pinInput = ''; state.pinError = false; }); go('welcome'); },
     pinPress: function (el) { pinPress(el.getAttribute('data-value')); },
     pinDel: pinDel,
-    setViewToday: function () { update(function () { state.viewMode = 'today'; state.archiveMonth = null; state.archiveDate = null; state.summaryFilter = 'all'; }); },
-    setViewArchive: function () { update(function () { state.viewMode = 'archive'; state.summaryFilter = 'all'; }); },
+    setViewToday: function () { update(function () { state.viewMode = 'today'; state.archiveMonth = null; state.archiveDate = null; state.summaryFilter = 'all'; state.searchQuery = ''; }); },
+    setViewArchive: function () { update(function () { state.viewMode = 'archive'; state.summaryFilter = 'all'; state.searchQuery = ''; }); },
+    clearSearch: function () { update(function () { state.searchQuery = ''; }); },
     pickMonth: function (el) { update(function () { state.archiveMonth = el.getAttribute('data-key'); state.archiveDate = null; }); },
     pickWeek: function (el) { update(function () { state.archiveDate = el.getAttribute('data-date'); state.summaryFilter = 'all'; }); },
     backToMonths: function () { update(function () { state.archiveMonth = null; state.archiveDate = null; }); },
@@ -1071,6 +1133,20 @@
     var context = t.getAttribute('data-context');
     var field = t.getAttribute('data-field');
     var value = t.value;
+
+    if (context === 'search') {
+      // The list needs to update live as they type, but a full render()
+      // would destroy/recreate this very <input> mid-keystroke and break
+      // IME composition — same issue text fields had everywhere else.
+      // Only re-render the results subtree, leaving the input alone.
+      state.searchQuery = value;
+      var resultsEl = document.getElementById('summaryResults');
+      if (resultsEl) resultsEl.innerHTML = renderSummaryBody();
+      var clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) clearBtn.style.visibility = value ? 'visible' : 'hidden';
+      return;
+    }
+
     if (field === 'birth') {
       value = digitsToYmd(value);
       if (t.value !== value) t.value = value;
