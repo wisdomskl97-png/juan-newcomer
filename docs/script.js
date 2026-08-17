@@ -941,25 +941,29 @@
       if (!searching && s.viewMode === 'archive' && s.archiveDate) {
         html += '<button class="back-chip" data-action="backToWeeks">← 주일 다시 선택</button>';
       }
+      if (filtered.length) {
+        html += '<div class="person-table-head"><span></span>' +
+          '<span class="pth-week">1주</span><span class="pth-week">2주</span><span class="pth-week">3주</span><span class="pth-week">4주</span>' +
+          '<span class="pth-cell">셀배정</span><span></span></div>';
+      }
       html += '<div class="people-list">';
       if (!filtered.length) {
         html += '<div class="list-empty">' + (searching ? '‘' + esc(s.searchQuery.trim()) + '’에 해당하는 등록자가 없습니다.' : '해당 목장에 등록된 새가족이 없습니다.') + '</div>';
       }
       filtered.forEach(function (p) {
         var realIndex = people.indexOf(p);
-        var initial = (p.name || '?').trim().charAt(0);
-        var yearLabel = p.year ? p.year + '년생' : '출생연도 미입력';
-        if (searching || (s.viewMode === 'archive' && s.archiveDisplay === 'fullList')) {
-          var dateLabel = shortDateLabel(dateForPerson(p));
-          yearLabel += dateLabel ? ' · ' + dateLabel + ' 등록' : '';
-        }
+        var info = p.info || {};
+        var dateLabel = shortDateLabel(dateForPerson(p));
         var tag = p.flow === 'univ' ? '<span class="tag tag-univ">대학</span>' : '<span class="tag tag-general">일반</span>';
         var chev = editable ? '<span class="chev">›</span>' : '';
         var action = editable ? ' data-action="startEdit" data-index="' + realIndex + '"' : '';
+        var weekTick = function (v) { return v ? '<span class="week-tick done">✓</span>' : '<span class="week-tick"></span>'; };
+        var cellVal = info.cellGroup ? '<span class="person-cell-val">' + esc(info.cellGroup) + '</span>' : '<span class="person-cell-val empty">미배정</span>';
         html += '<button class="person-row"' + action + (editable ? '' : ' style="cursor:default"') + '>' +
-          '<span class="person-avatar">' + esc(initial) + '</span>' +
-          '<div class="person-info"><div class="person-name">' + esc(p.name) + '</div><div class="person-meta"><span class="person-year">' + esc(yearLabel) + '</span>' + tag + '</div></div>' +
-          chev + '</button>';
+          '<div class="person-main"><div class="person-name">' + esc(p.name) + '</div><div class="person-meta">' +
+          (dateLabel ? '<span class="person-date">' + esc(dateLabel) + ' 등록</span>' : '') + tag + '</div></div>' +
+          weekTick(info.week1) + weekTick(info.week2) + weekTick(info.week3) + weekTick(info.week4) +
+          cellVal + chev + '</button>';
       });
       html += '</div>';
 

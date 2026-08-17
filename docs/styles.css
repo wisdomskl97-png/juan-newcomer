@@ -15,6 +15,8 @@
   --univ-tint-border: #F0DBBE;
   --error: #D6392B;
   --required: #E4572E;
+  --success: #2E9E5B;
+  --success-tint: #E3F5EA;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -218,16 +220,21 @@ input:focus, select:focus { border-color: var(--general); }
 .chev { flex-shrink: 0; color: #C2C0B8; font-size: 18px; font-weight: 700; }
 
 .people-list { display: flex; flex-direction: column; gap: 10px; }
-.person-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: #fff; border: 1px solid #EDEBE4; border-radius: 14px; padding: 12px 13px; }
+.person-table-head { display: grid; grid-template-columns: minmax(0,1fr) 26px 26px 26px 26px 48px 14px; align-items: center; gap: 6px; padding: 0 13px; margin-bottom: 6px; }
+.pth-week, .pth-cell { font-size: 10px; font-weight: 700; color: #A9ADBB; text-align: center; }
+.person-row { display: grid; grid-template-columns: minmax(0,1fr) 26px 26px 26px 26px 48px 14px; align-items: center; gap: 6px; width: 100%; text-align: left; background: #fff; border: 1px solid #EDEBE4; border-radius: 14px; padding: 12px 13px; }
 .person-row:hover { background: #FAF9F6; border-color: #DAD8D0; }
-.person-avatar { flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px; background: #F2F1EC; color: #6B7080; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
-.person-info { flex: 1; min-width: 0; }
+.person-main { min-width: 0; }
 .person-name { font-size: 16px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .person-meta { display: flex; align-items: center; gap: 7px; margin-top: 2px; }
-.person-year { font-size: 13px; color: var(--muted); }
+.person-date { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tag { flex-shrink: 0; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 16px; }
 .tag-univ { color: #D06C1E; background: var(--univ-tint); }
 .tag-general { color: #3C4A8C; background: var(--general-tint); }
+.week-tick { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 auto; border-radius: 7px; border: 1.5px solid #E4E2DB; background: #fff; font-size: 12px; }
+.week-tick.done { border-color: transparent; background: var(--success-tint); color: var(--success); font-weight: 900; }
+.person-cell-val { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-cell-val.empty { color: #A9ADBB; font-weight: 600; }
 .list-empty { text-align: center; padding: 32px 12px; color: #A9ADBB; font-size: 14px; font-weight: 600; }
 
 .univ-msg-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; padding: 16px; font-size: 15px; font-weight: 700; color: #fff; background: var(--univ); border: none; border-radius: 14px; box-shadow: 0 12px 22px -14px rgba(224,123,44,.7); }
