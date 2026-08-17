@@ -1083,8 +1083,8 @@
   function renderArchiveDisplayToggle() {
     var s = state;
     return '<div class="archive-display-toggle">' +
-      '<button type="button" class="archive-display-btn' + (s.archiveDisplay === 'monthly' ? ' active' : '') + '" data-action="setArchiveDisplayMonthly">📅 월별</button>' +
       '<button type="button" class="archive-display-btn' + (s.archiveDisplay === 'fullList' ? ' active' : '') + '" data-action="setArchiveDisplayFullList">📋 전체 목록</button>' +
+      '<button type="button" class="archive-display-btn' + (s.archiveDisplay === 'monthly' ? ' active' : '') + '" data-action="setArchiveDisplayMonthly">📅 월별</button>' +
       '<button type="button" class="archive-display-btn' + (s.archiveDisplay === 'byCell' ? ' active' : '') + '" data-action="setArchiveDisplayByCell">🗂 셀별</button>' +
       '</div>';
   }
