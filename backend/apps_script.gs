@@ -37,16 +37,17 @@ function doGet(e) {
 
 // 팀 요약 화면 조회: Newcomers 전체를 읽어 그룹별로
 // 반환한다 (일반목장/대학목장 모두 전체 정보 포함).
-// 소프트 삭제된(deleted_at 있는) 행은 제외한다.
+// 소프트 삭제된(deleted_at 있는) 행은 제외한다. 팀 전용 필드
+// (교육주차/셀배정/카카오단톡등록)와 관리 가능한 셀 목록도 같이 준다.
 function handleGetSummary() {
   var sheet = getSheet('Newcomers');
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) {
-    return jsonResponse({ ok: true, records: [] });
+    return jsonResponse({ ok: true, records: [], cells: getCellNames() });
   }
 
   var numRows = lastRow - 1;
-  var range = sheet.getRange(2, 1, numRows, 18);
+  var range = sheet.getRange(2, 1, numRows, 24);
   var values = range.getValues();
 
   var records = [];
@@ -70,11 +71,17 @@ function handleGetSummary() {
         major: row[8] || '',
         baptism: row[9] || '',
         prevChurch: row[10] || '',
-        prevDept: row[11] || ''
+        prevDept: row[11] || '',
+        week1: formatDateCell(row[18]),
+        week2: formatDateCell(row[19]),
+        week3: formatDateCell(row[20]),
+        week4: formatDateCell(row[21]),
+        cellGroup: row[22] || '',
+        kakaoGroupStatus: row[23] || ''
       }
     });
   }
-  return jsonResponse({ ok: true, records: records });
+  return jsonResponse({ ok: true, records: records, cells: getCellNames() });
 }
 
 function formatDateCell(v) {
@@ -134,6 +141,12 @@ function doPost(e) {
     }
     if (body.action === 'deleteRegistrant') {
       return deleteRegistrant(body);
+    }
+    if (body.action === 'addCell') {
+      return addCell(body);
+    }
+    if (body.action === 'removeCell') {
+      return removeCell(body);
     }
     return jsonResponse({
       ok: false,
@@ -225,6 +238,17 @@ function updateRegistrant(body) {
     body.prevDept || '',
     body.group || '일반목장'
   ]]);
+  // Team-only fields (S:X) — separate range because N:R in between
+  // (registration_source/follow_up_status/assigned_member/notes/
+  // deleted_at) must NOT be touched here.
+  sheet.getRange(row, 19, 1, 6).setValues([[
+    body.week1 || '',
+    body.week2 || '',
+    body.week3 || '',
+    body.week4 || '',
+    body.cellGroup || '',
+    body.kakaoGroupStatus || ''
+  ]]);
   return jsonResponse({ ok: true });
 }
 
@@ -246,6 +270,61 @@ function checkEditableRow(sheet, row) {
     return jsonResponse({ ok: false, error: 'invalid row' });
   }
   return null;
+}
+
+// 셀 이름은 팀요약 화면의 선택형 드롭다운에 쓰인다 (직접 입력이
+// 아니라 관리되는 목록). 'Cells' 탭 A열에 한 줄에 하나씩 저장하고,
+// 없으면 이전 시트 마이그레이션 때 확인된 7개로 처음 만든다.
+function getCellsSheet() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('Cells');
+  if (!sheet) {
+    sheet = ss.insertSheet('Cells');
+    sheet.getRange(1, 1).setValue('cell_name');
+    sheet.getRange(2, 1, 7, 1).setValues([
+      ['정우셀'], ['솜이셀'], ['은경셀'], ['민규셀'],
+      ['재욱셀'], ['용희셀'], ['소망셀']
+    ]);
+  }
+  return sheet;
+}
+
+function getCellNames() {
+  var sheet = getCellsSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  var values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var names = [];
+  for (var i = 0; i < values.length; i++) {
+    var v = String(values[i][0] || '').trim();
+    if (v) names.push(v);
+  }
+  return names;
+}
+
+function addCell(body) {
+  var name = String(body.name || '').trim();
+  if (!name) return jsonResponse({ ok: false, error: 'name is required' });
+  var existing = getCellNames();
+  if (existing.indexOf(name) !== -1) {
+    return jsonResponse({ ok: true, cells: existing }); // already there
+  }
+  getCellsSheet().appendRow([name]);
+  existing.push(name);
+  return jsonResponse({ ok: true, cells: existing });
+}
+
+function removeCell(body) {
+  var name = String(body.name || '').trim();
+  if (!name) return jsonResponse({ ok: false, error: 'name is required' });
+  var sheet = getCellsSheet();
+  var lastRow = sheet.getLastRow();
+  for (var r = lastRow; r >= 2; r--) {
+    if (String(sheet.getRange(r, 1).getValue() || '').trim() === name) {
+      sheet.deleteRow(r);
+    }
+  }
+  return jsonResponse({ ok: true, cells: getCellNames() });
 }
 
 function appendDailySummary(

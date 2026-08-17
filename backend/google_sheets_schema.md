@@ -36,11 +36,19 @@
 | P | assigned_member | **팀원이 수기 관리** | text | 담당자 이름 |
 | Q | notes | **팀원이 수기 관리** | text | 메모 |
 | R | deleted_at | 자동 (Apps Script) | datetime | 비어있으면 정상, 값이 있으면 삭제된 것 (소프트 삭제) |
+| S | week1_date | **팀원이 수기 관리** | date | 1주차 교육 날짜 |
+| T | week2_date | **팀원이 수기 관리** | date | 2주차 교육 날짜 |
+| U | week3_date | **팀원이 수기 관리** | date | 3주차 교육 날짜 |
+| V | week4_date | **팀원이 수기 관리** | date | 4주차 교육 날짜 |
+| W | cell_group | **팀원이 수기 관리** | text | 셀 이름 (`Cells` 탭에서 관리하는 목록 중 선택) 또는 빈칸(미배정) |
+| X | kakao_group_status | **팀원이 수기 관리** | text | 빈칸 또는 "등록완료" (새가족 단톡방 초대 여부) |
+
+> **2026-08-17 추가 (S~X열)**: 새가족 등록 폼에는 안 나오고, 팀요약 화면의 "등록 정보" 보기/수정 화면에서만 관리합니다. 이전 시트 마이그레이션 때 처음 채워졌습니다.
 
 **1행에 그대로 붙여넣을 헤더 (탭으로 구분됨, A1부터):**
 
 ```
-submitted_at	registration_date	name	contact	kakao_id	date_of_birth	introducer	visa_type	job_or_major	baptism_status	previous_church	previous_activity	group_type	registration_source	follow_up_status	assigned_member	notes	deleted_at
+submitted_at	registration_date	name	contact	kakao_id	date_of_birth	introducer	visa_type	job_or_major	baptism_status	previous_church	previous_activity	group_type	registration_source	follow_up_status	assigned_member	notes	deleted_at	week1_date	week2_date	week3_date	week4_date	cell_group	kakao_group_status
 ```
 
 > **2026-08-17 추가**: 팀 요약 화면에서 "이 등록 삭제하기"를 눌러도 실제로 행이 지워지지 않고 로컬 화면에서만 사라졌다가 새로고침하면 다시 나타나는 문제가 있었습니다. 이제 R열(`deleted_at`)에 삭제 시각을 기록하는 소프트 삭제 방식으로 실제 시트에 반영됩니다. **기존 시트에 R열이 없다면 위 헤더 줄의 `deleted_at`을 R1 셀에 직접 추가해주세요.** 실수로 삭제된 경우, R열의 값을 지우면 앱에 다시 나타납니다 (복구).
@@ -69,6 +77,16 @@ registration_date	group_type	name	birth_year	created_at
 ```
 
 > 연락처·비자·세례여부 등 상세 개인정보는 이 탭에 절대 들어가지 않습니다 — 팀 요약 화면에서 이름+태어난해만 보여주는 원칙과 1:1로 대응합니다.
+
+---
+
+## 탭 3: `Cells` (셀 이름 관리 목록)
+
+> Apps Script가 첫 사용 시 자동으로 만듭니다 (직접 만들 필요 없음). A열에 셀 이름을 한 줄에 하나씩 저장하고, 팀요약 화면의 셀배정 드롭다운/관리 화면이 이 목록을 그대로 읽고 씁니다. 처음 만들어질 때 이전 시트 마이그레이션에서 확인된 7개(정우셀/솜이셀/은경셀/민규셀/재욱셀/용희셀/소망셀)로 시작합니다.
+
+| 열 | 헤더명 | 설명 |
+|---|---|---|
+| A | cell_name | 셀 이름 |
 
 ---
 

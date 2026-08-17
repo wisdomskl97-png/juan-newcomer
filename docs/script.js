@@ -27,6 +27,10 @@
     editDeleteArm: false,
     editSaving: false,
     editSaveError: '',
+    cellOptions: [],
+    showCellManager: false,
+    cellManagerInput: '',
+    cellManagerError: '',
     pinInput: '',
     pinError: false,
     teamUnlocked: false,
@@ -68,7 +72,7 @@
   });
 
   function anyOverlay() {
-    return state.showDiscard || state.editDeleteArm || state.showKakaoHelp || state.showUnivMsg || state.showSummaryPreview || state.editIndex !== null;
+    return state.showDiscard || state.editDeleteArm || state.showKakaoHelp || state.showUnivMsg || state.showSummaryPreview || state.showCellManager || state.editIndex !== null;
   }
   function closeTopOverlay() {
     if (state.showDiscard) return update(function () { state.showDiscard = false; });
@@ -76,6 +80,7 @@
     if (state.showKakaoHelp) return update(function () { state.showKakaoHelp = false; });
     if (state.showUnivMsg) return update(function () { state.showUnivMsg = false; });
     if (state.showSummaryPreview) return update(function () { state.showSummaryPreview = false; });
+    if (state.showCellManager) return update(function () { state.showCellManager = false; state.cellManagerInput = ''; state.cellManagerError = ''; });
     if (state.editIndex !== null) return requestClose();
   }
   // Mirrors what each screen's own "Back"/"Home" button already does.
@@ -177,6 +182,39 @@
     return d >= 1 && d <= daysInMonth;
   }
   var BIRTH_FORMAT_MSG = '생년월일 형식을 확인해주세요 (예: 1995-01-01) / Please check the date format (e.g. 1995-01-01)';
+
+  // 교육주차 날짜는 연도 없이 월-일만 입력받는다 (등록일 기준으로
+  // 몇 주 안 걸리는 일이라 연도까지 물어볼 필요가 없음). 저장할 때만
+  // 등록일의 연도를 붙여서 시트의 date 컬럼과 같은 형식으로 만든다.
+  function digitsToMd(raw) {
+    var digits = String(raw || '').replace(/\D/g, '').slice(0, 4);
+    var mo = digits.slice(0, 2), d = digits.slice(2, 4);
+    var out = mo;
+    if (d) out += '-' + d;
+    return out;
+  }
+  function mdFromFullDate(full) {
+    var m = /^\d{4}-(\d{2}-\d{2})$/.exec(String(full || ''));
+    return m ? m[1] : '';
+  }
+  function mdDisplayLabel(md) {
+    var m = /^(\d{2})-(\d{2})$/.exec(String(md || ''));
+    return m ? Number(m[1]) + '월 ' + Number(m[2]) + '일' : '';
+  }
+  function fullDateFromMd(md, regDateStr) {
+    var m = /^(\d{2})-(\d{2})$/.exec(String(md || '').trim());
+    if (!m) return '';
+    var month = Number(m[1]), day = Number(m[2]);
+    if (month < 1 || month > 12) return '';
+    var daysInMonth = new Date(2024, month, 0).getDate(); // 2024: leap year, safe upper bound for Feb 29
+    if (day < 1 || day > daysInMonth) return '';
+    var regParts = String(regDateStr || '').split('-').map(Number);
+    var year = regParts[0] || new Date().getFullYear();
+    var regMonth = regParts[1] || month;
+    // 등록은 12월인데 교육주차가 1~2월이면 해를 넘긴 것 — 다음 해로 보정.
+    if (month < regMonth - 6) year += 1;
+    return year + '-' + m[1] + '-' + m[2];
+  }
 
   function validateGeneral() {
     var f = state.form, er = {};
@@ -363,7 +401,7 @@
       .then(function (result) {
         if (!result || !result.ok) throw new Error((result && result.error) || 'load failed');
         var grouped = groupSummaryRecords(result.records || []);
-        update(function () { state.summaryLoading = false; state.today = grouped.today; state.archive = grouped.archive; });
+        update(function () { state.summaryLoading = false; state.today = grouped.today; state.archive = grouped.archive; state.cellOptions = result.cells || []; });
       })
       .catch(function () {
         update(function () { state.summaryLoading = false; state.summaryLoadError = '요약 데이터를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.'; });
@@ -489,9 +527,13 @@
     var p = activeList()[i], info = p.info || {};
     var draft = {
       row: p.row,
+      regDate: dateForPerson(p), // needed to attach a year to week1~4 (month-day only) on save
       name: p.name || '', year: p.year || '', flow: p.flow || 'general',
       contact: info.contact || '', kakao: info.kakao || '', birth: info.birth || '', visa: info.visa || '',
-      major: info.major || '', leader: info.leader || '', baptism: info.baptism || '', prevChurch: info.prevChurch || '', prevDept: info.prevDept || ''
+      major: info.major || '', leader: info.leader || '', baptism: info.baptism || '', prevChurch: info.prevChurch || '', prevDept: info.prevDept || '',
+      week1: mdFromFullDate(info.week1), week2: mdFromFullDate(info.week2),
+      week3: mdFromFullDate(info.week3), week4: mdFromFullDate(info.week4),
+      cellGroup: info.cellGroup || '', kakaoGroupStatus: info.kakaoGroupStatus || ''
     };
     update(function () {
       state.editIndex = i; state.editDraft = draft; state.editOriginal = JSON.stringify(draft);
@@ -518,7 +560,10 @@
       name: d.name, contact: d.contact, kakao: d.kakao, birth: d.birth,
       leader: d.leader, visa: d.visa, job: d.major, baptism: d.baptism,
       prevChurch: d.prevChurch, prevDept: d.prevDept,
-      group: d.flow === 'univ' ? '대학목장' : '일반목장'
+      group: d.flow === 'univ' ? '대학목장' : '일반목장',
+      week1: fullDateFromMd(d.week1, d.regDate), week2: fullDateFromMd(d.week2, d.regDate),
+      week3: fullDateFromMd(d.week3, d.regDate), week4: fullDateFromMd(d.week4, d.regDate),
+      cellGroup: d.cellGroup, kakaoGroupStatus: d.kakaoGroupStatus
     }).then(function () {
       update(function () { state.editIndex = null; state.editDeleteArm = false; state.showDiscard = false; state.editSaving = false; });
       loadSummaryData();
@@ -992,6 +1037,13 @@
       html += viewRow('세례 여부', d.baptism);
       html += viewRow('이전 출석교회', d.prevChurch);
       html += viewRow('이전 봉사부서', d.prevDept);
+      html += '<div class="edit-divider"></div><p class="edit-detail-label">팀 전용 정보</p>';
+      html += viewRow('1주차 교육', mdDisplayLabel(d.week1));
+      html += viewRow('2주차 교육', mdDisplayLabel(d.week2));
+      html += viewRow('3주차 교육', mdDisplayLabel(d.week3));
+      html += viewRow('4주차 교육', mdDisplayLabel(d.week4));
+      html += viewRow('셀배정', d.cellGroup || '미배정');
+      html += viewRow('카카오 단톡등록', d.kakaoGroupStatus || '미등록');
       html += '<button class="save-btn" data-action="enterEditMode">✎ 정보 수정하기 · Edit</button>';
     } else {
       html += '<label class="edit-label">목장 구분</label>';
@@ -1024,6 +1076,23 @@
       html += ef('prevChurch', '이전 출석교회');
       html += ef('prevDept', '이전 봉사부서');
 
+      html += '<div class="edit-divider"></div><p class="edit-detail-label">팀 전용 정보</p>';
+      var wf = function (field, label) {
+        return '<div class="edit-field" style="flex:1"><label class="edit-label">' + label + '</label><input id="editDraft-' + field + '" type="text" inputMode="numeric" placeholder="MM-DD" data-context="editDraft" data-field="' + field + '" value="' + esc(d[field]) + '" /></div>';
+      };
+      html += '<div class="field-row">' + wf('week1', '1주차 교육') + wf('week2', '2주차 교육') + '</div>';
+      html += '<div class="field-row">' + wf('week3', '3주차 교육') + wf('week4', '4주차 교육') + '</div>';
+      html += '<div class="edit-field"><label class="edit-label">셀배정</label><div class="field-row" style="align-items:flex-end">' +
+        '<select id="editDraft-cellGroup" style="flex:1" data-context="editDraft" data-field="cellGroup">' +
+        '<option value="">미배정</option>' +
+        state.cellOptions.map(function (c) { return '<option value="' + esc(c) + '"' + (c === d.cellGroup ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') +
+        '</select>' +
+        '<button type="button" class="btn-pill" data-action="openCellManager">+ 셀 관리</button>' +
+        '</div></div>';
+      html += '<div class="edit-field edit-checkbox-row"><label class="edit-checkbox-label">' +
+        '<input type="checkbox" data-context="editDraft" data-field="kakaoGroupStatus"' + (d.kakaoGroupStatus === '등록완료' ? ' checked' : '') + ' /> 새가족 단톡방 등록완료' +
+        '</label></div>';
+
       if (state.editSaveError) {
         html += '<div class="error-msg" style="margin-top:14px"><span class="error-dot">!</span>' + esc(state.editSaveError) + '</div>';
       }
@@ -1052,6 +1121,30 @@
     return html;
   }
 
+  function renderCellManager(enter) {
+    if (!state.showCellManager) return '';
+    var html = '<div class="overlay ' + enter + '" data-overlay="cellmanager"><div class="sheet">' +
+      '<div class="sheet-head"><h3>셀 관리</h3><button class="btn-pill" data-action="closeCellManager">닫기</button></div>';
+    if (!state.cellOptions.length) {
+      html += '<p class="sheet-sub">등록된 셀이 없습니다.</p>';
+    } else {
+      html += '<div class="cell-manager-list">' +
+        state.cellOptions.map(function (c) {
+          return '<div class="cell-manager-row"><span>' + esc(c) + '</span><button type="button" class="cell-remove-btn" data-action="removeCellAction" data-name="' + esc(c) + '">✕</button></div>';
+        }).join('') +
+        '</div>';
+    }
+    html += '<div class="field-row" style="margin-top:14px;align-items:flex-end">' +
+      '<div class="edit-field" style="flex:1"><label class="edit-label">새 셀 이름</label><input id="cellManagerInput" type="text" data-context="cellManager" data-field="cellManagerInput" placeholder="예: 새싹셀" value="' + esc(state.cellManagerInput) + '" /></div>' +
+      '<button type="button" class="btn-pill" data-action="addCellSubmit">추가</button>' +
+      '</div>';
+    if (state.cellManagerError) {
+      html += '<div class="error-msg" style="margin-top:10px"><span class="error-dot">!</span>' + esc(state.cellManagerError) + '</div>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
   var SCREEN_RENDERERS = {
     welcome: renderWelcome,
     question: renderQuestion,
@@ -1068,7 +1161,7 @@
   // PIN digit, every filter tap), not just on real screen/overlay
   // transitions. Track what was open on the previous render and only hand
   // out the animating class when something just opened.
-  var prevSnapshot = { screen: null, kakao: false, univmsg: false, summaryPreview: false, editing: false, discard: false };
+  var prevSnapshot = { screen: null, kakao: false, univmsg: false, summaryPreview: false, editing: false, discard: false, cellManager: false };
 
   function render() {
     var cur = {
@@ -1077,7 +1170,8 @@
       univmsg: state.showUnivMsg,
       summaryPreview: state.showSummaryPreview,
       editing: state.editIndex !== null,
-      discard: state.showDiscard
+      discard: state.showDiscard,
+      cellManager: state.showCellManager
     };
     var screenEnter = cur.screen !== prevSnapshot.screen ? 'screen-enter' : '';
     var kakaoEnter = cur.kakao && !prevSnapshot.kakao ? 'overlay-enter' : '';
@@ -1085,10 +1179,11 @@
     var summaryPreviewEnter = cur.summaryPreview && !prevSnapshot.summaryPreview ? 'overlay-enter' : '';
     var editEnter = cur.editing && !prevSnapshot.editing ? 'overlay-enter' : '';
     var discardEnter = cur.discard && !prevSnapshot.discard ? 'discard-enter' : '';
+    var cellManagerEnter = cur.cellManager && !prevSnapshot.cellManager ? 'overlay-enter' : '';
 
     var body = (SCREEN_RENDERERS[state.screen] || renderWelcome)(screenEnter);
     var html = '<div class="app-shell">' + body + renderCornerLogo() + renderWelcomeTeam() +
-      renderKakaoHelp(kakaoEnter) + renderUnivMsg(univmsgEnter) + renderSummaryPreview(summaryPreviewEnter) + renderEditSheet(editEnter, discardEnter) +
+      renderKakaoHelp(kakaoEnter) + renderUnivMsg(univmsgEnter) + renderSummaryPreview(summaryPreviewEnter) + renderEditSheet(editEnter, discardEnter) + renderCellManager(cellManagerEnter) +
       '</div>';
     app.innerHTML = html;
     prevSnapshot = cur;
@@ -1128,7 +1223,12 @@
     setFilterUniv: function () { update(function () { state.summaryFilter = state.summaryFilter === 'univ' ? 'all' : 'univ'; }); },
     startEdit: function (el) { startEdit(Number(el.getAttribute('data-index'))); },
     requestClose: requestClose,
-    enterEditMode: function () { update(function () { state.editMode = 'edit'; }); },
+    enterEditMode: function () {
+      update(function () {
+        state.editMode = 'edit';
+        if (state.editDraft.kakao && !state.editDraft.kakaoGroupStatus) state.editDraft.kakaoGroupStatus = '등록완료';
+      });
+    },
     exitEditMode: function () { update(function () { state.editDraft = JSON.parse(state.editOriginal); state.editMode = 'view'; }); },
     setEditFlowGeneral: function () { update(function () { state.editDraft.flow = 'general'; }); },
     setEditFlowUniv: function () { update(function () { state.editDraft.flow = 'univ'; }); },
@@ -1145,7 +1245,31 @@
     copyUnivMsg: function () { copyText(univMessage(), 'copiedUnivMsg'); },
     shareUnivMsg: function () { shareText(univMessage(), 'sharedUnivMsg'); },
     copySummary: function () { copyText(summaryText(), 'copiedSummary'); },
-    shareSummary: function () { shareText(summaryText(), 'sharedSummary'); }
+    shareSummary: function () { shareText(summaryText(), 'sharedSummary'); },
+    openCellManager: function () { update(function () { state.showCellManager = true; state.cellManagerInput = ''; state.cellManagerError = ''; }); },
+    closeCellManager: function () { update(function () { state.showCellManager = false; state.cellManagerInput = ''; state.cellManagerError = ''; }); },
+    addCellSubmit: function () {
+      var name = (state.cellManagerInput || '').trim();
+      if (!name) return;
+      if (state.cellOptions.indexOf(name) !== -1) { update(function () { state.cellManagerError = '이미 있는 셀입니다.'; }); return; }
+      update(function () { state.cellManagerError = ''; });
+      apiPost({ action: 'addCell', name: name }).then(function (result) {
+        update(function () { state.cellOptions = result.cells || state.cellOptions.concat([name]); state.cellManagerInput = ''; });
+      }).catch(function () {
+        update(function () { state.cellManagerError = '추가에 실패했습니다. 다시 시도해주세요.'; });
+      });
+    },
+    removeCellAction: function (el) {
+      var name = el.getAttribute('data-name');
+      apiPost({ action: 'removeCell', name: name }).then(function (result) {
+        update(function () {
+          state.cellOptions = result.cells || state.cellOptions.filter(function (c) { return c !== name; });
+          if (state.editDraft.cellGroup === name) state.editDraft.cellGroup = '';
+        });
+      }).catch(function () {
+        update(function () { state.cellManagerError = '삭제에 실패했습니다. 다시 시도해주세요.'; });
+      });
+    }
   };
 
   app.addEventListener('click', function (e) {
@@ -1157,6 +1281,7 @@
       if (kind === 'summarypreview') return ACTIONS.closeSummaryPreview();
       if (kind === 'edit') return ACTIONS.requestClose();
       if (kind === 'discard') return ACTIONS.cancelDiscard();
+      if (kind === 'cellmanager') return ACTIONS.closeCellManager();
     }
     var target = e.target.closest && e.target.closest('[data-action]');
     if (!target) return;
@@ -1197,8 +1322,16 @@
       return;
     }
 
+    if (context === 'cellManager') {
+      state.cellManagerInput = value;
+      return;
+    }
+
     if (field === 'birth') {
       value = digitsToYmd(value);
+      if (t.value !== value) t.value = value;
+    } else if (field === 'week1' || field === 'week2' || field === 'week3' || field === 'week4') {
+      value = digitsToMd(value);
       if (t.value !== value) t.value = value;
     }
     var target = context === 'editDraft' ? state.editDraft : state.form;
@@ -1211,15 +1344,20 @@
   });
 
   // Selects have no IME composition concerns, and a change may need to
-  // reveal/hide conditional fields (e.g. visa "기타"), so a full render is fine.
+  // reveal/hide conditional fields (e.g. visa "기타"), so a full render is
+  // fine. Checkboxes (카카오 단톡등록) ride along here too — same
+  // reasoning, and 'checked' isn't something the 'input' handler reads.
   app.addEventListener('change', function (e) {
     var t = e.target;
-    if (!t.hasAttribute || !t.hasAttribute('data-field') || t.tagName !== 'SELECT') return;
+    if (!t.hasAttribute || !t.hasAttribute('data-field')) return;
+    var isCheckbox = t.type === 'checkbox';
+    if (t.tagName !== 'SELECT' && !isCheckbox) return;
     var context = t.getAttribute('data-context');
     var field = t.getAttribute('data-field');
+    var value = isCheckbox ? (t.checked ? '등록완료' : '') : t.value;
     update(function () {
       var target = context === 'editDraft' ? state.editDraft : state.form;
-      target[field] = t.value;
+      target[field] = value;
       if (context === 'form' && state.errors[field]) state.errors[field] = undefined;
     });
     if (context === 'form') persistRegSession();

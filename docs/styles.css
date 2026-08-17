@@ -277,6 +277,15 @@ input:focus, select:focus { border-color: var(--general); }
 .delete-confirm-yes { color: #fff; background: var(--error); }
 .delete-confirm-no { color: #6B7080; background: #fff; border: 1px solid #E4E2DB !important; }
 
+.edit-checkbox-row { display: flex; align-items: center; }
+.edit-checkbox-label { display: flex; align-items: center; gap: 9px; font-size: 14.5px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.edit-checkbox-label input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--general); cursor: pointer; }
+
+.cell-manager-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.cell-manager-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; font-size: 14.5px; font-weight: 600; color: var(--ink); background: #F5F4F0; border: 1px solid #ECEAE4; border-radius: 11px; }
+.cell-remove-btn { width: 26px; height: 26px; border-radius: 50%; border: none; background: #fff; color: #C6483A; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.cell-remove-btn:hover { background: #FDF4F2; }
+
 .discard-overlay { position: absolute; inset: 0; background: rgba(30,28,40,.45); display: flex; align-items: center; justify-content: center; padding: 26px; border-radius: 26px 26px 0 0; z-index: 5; }
 .discard-enter { animation: scEnter .18s ease; }
 .discard-box { background: #fff; border-radius: 20px; padding: 22px 20px; box-shadow: 0 16px 40px -12px rgba(0,0,0,.4); text-align: center; }
