@@ -1206,6 +1206,10 @@
     var d = state.editDraft;
     var isGeneral = d.flow !== 'univ';
     var isEdit = state.editMode === 'edit';
+    // 오늘 tab's own list (not a search) shows only what the registration
+    // form itself collects — the 교육주차/셀배정/카카오단톡 team fields
+    // are 지난 기록/검색 only, matching the person-row change above.
+    var showTeamFields = isSearching() || state.viewMode !== 'today';
     var html = '<div class="overlay ' + enter + '" data-overlay="edit"><div class="sheet edit-sheet">';
     html += '<div class="sheet-head" style="margin-bottom:16px"><button class="btn-pill" data-action="requestClose">← 뒤로</button><h3>' + (isEdit ? '등록 정보 수정' : '등록 정보') + '</h3></div>';
 
@@ -1223,13 +1227,15 @@
       html += viewRow('세례 여부', d.baptism);
       html += viewRow('이전 출석교회', d.prevChurch);
       html += viewRow('이전 봉사부서', d.prevDept);
-      html += '<div class="edit-divider"></div><p class="edit-detail-label">팀 전용 정보</p>';
-      html += viewRow('1주차 교육', mdDisplayLabel(d.week1));
-      html += viewRow('2주차 교육', mdDisplayLabel(d.week2));
-      html += viewRow('3주차 교육', mdDisplayLabel(d.week3));
-      html += viewRow('4주차 교육', mdDisplayLabel(d.week4));
-      html += viewRow('셀배정', d.cellGroup || '미배정');
-      html += viewRow('카카오 단톡등록', d.kakaoGroupStatus || '미등록');
+      if (showTeamFields) {
+        html += '<div class="edit-divider"></div><p class="edit-detail-label">팀 전용 정보</p>';
+        html += viewRow('1주차 교육', mdDisplayLabel(d.week1));
+        html += viewRow('2주차 교육', mdDisplayLabel(d.week2));
+        html += viewRow('3주차 교육', mdDisplayLabel(d.week3));
+        html += viewRow('4주차 교육', mdDisplayLabel(d.week4));
+        html += viewRow('셀배정', d.cellGroup || '미배정');
+        html += viewRow('카카오 단톡등록', d.kakaoGroupStatus || '미등록');
+      }
       html += '<button class="save-btn" data-action="enterEditMode">✎ 정보 수정하기 · Edit</button>';
     } else {
       html += '<label class="edit-label">목장 구분</label>';
@@ -1262,22 +1268,24 @@
       html += ef('prevChurch', '이전 출석교회');
       html += ef('prevDept', '이전 봉사부서');
 
-      html += '<div class="edit-divider"></div><p class="edit-detail-label">팀 전용 정보</p>';
-      var wf = function (field, label) {
-        return '<div class="edit-field" style="flex:1"><label class="edit-label">' + label + '</label><input id="editDraft-' + field + '" type="text" inputMode="numeric" placeholder="MM-DD" data-context="editDraft" data-field="' + field + '" value="' + esc(d[field]) + '" /></div>';
-      };
-      html += '<div class="field-row">' + wf('week1', '1주차 교육') + wf('week2', '2주차 교육') + '</div>';
-      html += '<div class="field-row">' + wf('week3', '3주차 교육') + wf('week4', '4주차 교육') + '</div>';
-      html += '<div class="edit-field"><label class="edit-label">셀배정</label><div class="field-row" style="align-items:flex-end">' +
-        '<select id="editDraft-cellGroup" style="flex:1" data-context="editDraft" data-field="cellGroup">' +
-        '<option value="">미배정</option>' +
-        state.cellOptions.map(function (c) { return '<option value="' + esc(c) + '"' + (c === d.cellGroup ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') +
-        '</select>' +
-        '<button type="button" class="btn-pill" data-action="openCellManager">+ 셀 관리</button>' +
-        '</div></div>';
-      html += '<div class="edit-field edit-checkbox-row"><label class="edit-checkbox-label">' +
-        '<input type="checkbox" data-context="editDraft" data-field="kakaoGroupStatus"' + (d.kakaoGroupStatus === '등록완료' ? ' checked' : '') + ' /> 새가족 단톡방 등록완료' +
-        '</label></div>';
+      if (showTeamFields) {
+        html += '<div class="edit-divider"></div><p class="edit-detail-label">팀 전용 정보</p>';
+        var wf = function (field, label) {
+          return '<div class="edit-field" style="flex:1"><label class="edit-label">' + label + '</label><input id="editDraft-' + field + '" type="text" inputMode="numeric" placeholder="MM-DD" data-context="editDraft" data-field="' + field + '" value="' + esc(d[field]) + '" /></div>';
+        };
+        html += '<div class="field-row">' + wf('week1', '1주차 교육') + wf('week2', '2주차 교육') + '</div>';
+        html += '<div class="field-row">' + wf('week3', '3주차 교육') + wf('week4', '4주차 교육') + '</div>';
+        html += '<div class="edit-field"><label class="edit-label">셀배정</label><div class="field-row" style="align-items:flex-end">' +
+          '<select id="editDraft-cellGroup" style="flex:1" data-context="editDraft" data-field="cellGroup">' +
+          '<option value="">미배정</option>' +
+          state.cellOptions.map(function (c) { return '<option value="' + esc(c) + '"' + (c === d.cellGroup ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') +
+          '</select>' +
+          '<button type="button" class="btn-pill" data-action="openCellManager">+ 셀 관리</button>' +
+          '</div></div>';
+        html += '<div class="edit-field edit-checkbox-row"><label class="edit-checkbox-label">' +
+          '<input type="checkbox" data-context="editDraft" data-field="kakaoGroupStatus"' + (d.kakaoGroupStatus === '등록완료' ? ' checked' : '') + ' /> 새가족 단톡방 등록완료' +
+          '</label></div>';
+      }
 
       if (state.editSaveError) {
         html += '<div class="error-msg" style="margin-top:14px"><span class="error-dot">!</span>' + esc(state.editSaveError) + '</div>';
