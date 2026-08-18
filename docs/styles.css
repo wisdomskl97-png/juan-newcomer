@@ -223,6 +223,7 @@ input:focus, select:focus { border-color: var(--general); }
 .person-table-head { display: grid; grid-template-columns: minmax(0,1fr) 26px 26px 26px 26px 48px 14px; align-items: center; gap: 6px; padding: 0 13px; margin-bottom: 6px; }
 .pth-week, .pth-cell { font-size: 10px; font-weight: 700; color: #A9ADBB; text-align: center; }
 .person-row { display: grid; grid-template-columns: minmax(0,1fr) 26px 26px 26px 26px 48px 14px; align-items: center; gap: 6px; width: 100%; text-align: left; background: #fff; border: 1px solid #EDEBE4; border-radius: 14px; padding: 12px 13px; }
+.person-row.simple { grid-template-columns: minmax(0,1fr) 14px; }
 .person-row:hover { background: #FAF9F6; border-color: #DAD8D0; }
 .person-main { min-width: 0; }
 .person-name { font-size: 16px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

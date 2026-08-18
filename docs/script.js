@@ -1066,7 +1066,13 @@
       if (!searching && s.viewMode === 'archive' && s.archiveDate) {
         html += '<button class="back-chip" data-action="backToWeeks">← 주일 다시 선택</button>';
       }
-      if (filtered.length) {
+      // 오늘 tab (that day's own list, not a search) has no education/셀
+      // columns — every row already shares the same date, so show birth
+      // year instead. 지난 기록 (and search, which spans every date) keeps
+      // 교육상태·셀배정 since those are what a team member browsing past
+      // registrants actually wants to see.
+      var showEduCell = searching || s.viewMode !== 'today';
+      if (filtered.length && showEduCell) {
         html += '<div class="person-table-head"><span></span>' +
           '<span class="pth-week">1주</span><span class="pth-week">2주</span><span class="pth-week">3주</span><span class="pth-week">4주</span>' +
           '<span class="pth-cell">셀배정</span><span></span></div>';
@@ -1078,17 +1084,25 @@
       filtered.forEach(function (p) {
         var realIndex = people.indexOf(p);
         var info = p.info || {};
-        var dateLabel = shortDateLabel(dateForPerson(p));
         var tag = p.flow === 'univ' ? '<span class="tag tag-univ">대학</span>' : '<span class="tag tag-general">일반</span>';
         var chev = editable ? '<span class="chev">›</span>' : '';
         var action = editable ? ' data-action="startEdit" data-index="' + realIndex + '"' : '';
-        var weekTick = function (v) { return v ? '<span class="week-tick done">✓</span>' : '<span class="week-tick"></span>'; };
-        var cellVal = '<span class="person-cell-val">' + esc(info.cellGroup || '미배정') + '</span>';
-        html += '<button class="person-row"' + action + (editable ? '' : ' style="cursor:default"') + '>' +
-          '<div class="person-main"><div class="person-name">' + esc(p.name) + '</div><div class="person-meta">' +
-          (dateLabel ? '<span class="person-date">' + esc(dateLabel) + ' 등록</span>' : '') + tag + '</div></div>' +
-          weekTick(info.week1) + weekTick(info.week2) + weekTick(info.week3) + weekTick(info.week4) +
-          cellVal + chev + '</button>';
+        if (showEduCell) {
+          var dateLabel = shortDateLabel(dateForPerson(p));
+          var weekTick = function (v) { return v ? '<span class="week-tick done">✓</span>' : '<span class="week-tick"></span>'; };
+          var cellVal = '<span class="person-cell-val">' + esc(info.cellGroup || '미배정') + '</span>';
+          html += '<button class="person-row"' + action + (editable ? '' : ' style="cursor:default"') + '>' +
+            '<div class="person-main"><div class="person-name">' + esc(p.name) + '</div><div class="person-meta">' +
+            (dateLabel ? '<span class="person-date">' + esc(dateLabel) + ' 등록</span>' : '') + tag + '</div></div>' +
+            weekTick(info.week1) + weekTick(info.week2) + weekTick(info.week3) + weekTick(info.week4) +
+            cellVal + chev + '</button>';
+        } else {
+          var yearLabel = p.year ? p.year + '년생' : '출생연도 미입력';
+          html += '<button class="person-row simple"' + action + (editable ? '' : ' style="cursor:default"') + '>' +
+            '<div class="person-main"><div class="person-name">' + esc(p.name) + '</div><div class="person-meta">' +
+            '<span class="person-date">' + esc(yearLabel) + '</span>' + tag + '</div></div>' +
+            chev + '</button>';
+        }
       });
       html += '</div>';
 
