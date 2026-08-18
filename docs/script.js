@@ -1216,7 +1216,6 @@
     if (!isEdit) {
       html += viewRow('목장 구분', isGeneral ? '일반목장' : '대학목장');
       html += viewRow('이름 / Name', d.name);
-      html += viewRow('태어난 해', d.year);
       html += '<div class="edit-divider"></div><p class="edit-detail-label">상세 정보</p>';
       html += viewRow('연락처 / Contact', d.contact);
       html += viewRow('카카오톡 ID', d.kakao);
@@ -1250,7 +1249,6 @@
       };
 
       html += ef('name', '이름 / Name');
-      html += ef('year', '태어난 해', 'text');
       html += '<div class="edit-divider"></div><p class="edit-detail-label">상세 정보</p>';
       html += ef('contact', '연락처 / Contact', 'tel');
       html += '<div class="field-row">';
