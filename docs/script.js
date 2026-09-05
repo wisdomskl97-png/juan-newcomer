@@ -634,7 +634,8 @@
     list.forEach(function (p, i) {
       s += '\n' + (i + 1) + '. ' + p.name + ' · ' + (p.flow === 'univ' ? '대학목장' : '디딤돌목장') + '\n';
       if (p.info) {
-        s += line('연락처', p.info.contact) + line('카카오톡', p.info.kakao) + line('생년월일', p.info.birth) + line('비자', p.info.visa) + line('전공', p.info.major) + line('인도자', p.info.leader) + line('세례여부', p.info.baptism) + line('이전출석교회', p.info.prevChurch) + line('이전봉사부서', p.info.prevDept);
+        var baptismLabel = p.info.baptism === '세례' ? '세례받음' : p.info.baptism;
+        s += line('연락처', p.info.contact) + line('카카오톡', p.info.kakao) + line('생년월일', p.info.birth) + line('비자', p.info.visa) + line('전공', p.info.major) + line('인도자', p.info.leader) + line('세례여부', baptismLabel) + line('이전출석교회', p.info.prevChurch) + line('이전봉사부서', p.info.prevDept);
       }
     });
     return s;
