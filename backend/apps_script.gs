@@ -4,7 +4,7 @@
  * "주안 새가족 등록 DB" spreadsheet (Extensions > Apps Script), then
  * deploy as a Web App. See backend/apps_script_setup.md for steps.
  *
- * Both 일반목장 and 대학목장 submissions are now stored in full in
+ * Both 디딤돌목장 and 대학목장 submissions are now stored in full in
  * Newcomers, distinguished by the group_type column. (Earlier versions
  * kept 대학목장 out of Newcomers entirely — that's been dropped.)
  */
@@ -36,7 +36,7 @@ function doGet(e) {
 }
 
 // 팀 요약 화면 조회: Newcomers 전체를 읽어 그룹별로
-// 반환한다 (일반목장/대학목장 모두 전체 정보 포함).
+// 반환한다 (디딤돌목장/대학목장 모두 전체 정보 포함).
 // 소프트 삭제된(deleted_at 있는) 행은 제외한다. 팀 전용 필드
 // (교육주차/셀배정/카카오단톡등록)와 관리 가능한 셀 목록도 같이 준다.
 function handleGetSummary() {
@@ -59,7 +59,7 @@ function handleGetSummary() {
     records.push({
       row: i + 2, // actual sheet row number, needed to edit/delete later
       date: formatDateCell(row[1]), // registration_date
-      group: row[12] || '일반목장', // group_type
+      group: row[12] || '디딤돌목장', // group_type
       name: name,
       year: yearFromDateCell(row[5]), // date_of_birth
       info: {
@@ -131,7 +131,7 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     if (body.action === 'submitGeneral') {
-      return saveNewcomer(body, '일반목장');
+      return saveNewcomer(body, '디딤돌목장');
     }
     if (body.action === 'submitUniv') {
       return saveNewcomer(body, '대학목장');
@@ -160,7 +160,7 @@ function doPost(e) {
   }
 }
 
-// 일반목장/대학목장 공통 저장: Newcomers에 전체 정보를
+// 디딤돌목장/대학목장 공통 저장: Newcomers에 전체 정보를
 // 저장하고, DailySummary에는 이름/태어난해만 추가로
 // 남긴다 (팀 요약 화면의 가벼운 보조 인덱스 용도).
 function saveNewcomer(body, groupType) {
@@ -236,7 +236,7 @@ function updateRegistrant(body) {
     body.baptism || '',
     body.prevChurch || '',
     body.prevDept || '',
-    body.group || '일반목장'
+    body.group || '디딤돌목장'
   ]]);
   // Team-only fields (S:X) — separate range because N:R in between
   // (registration_source/follow_up_status/assigned_member/notes/
