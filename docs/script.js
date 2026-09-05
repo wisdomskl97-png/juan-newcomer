@@ -498,7 +498,7 @@
     return false;
   }
 
-  // Whether the interactive 총등록/일반목장/대학목장 filter cards should
+  // Whether the interactive 총등록/디딤돌목장/대학목장 filter cards should
   // show. Only for a genuinely single date-or-cell list (오늘/검색/특정
   // 주일/특정 셀) — not 전체 목록, which spans every date and just shows
   // a plain total instead, matching the 월별/셀별 picker screens.
@@ -511,7 +511,7 @@
     return false;
   }
 
-  // Whether the plain "총 N · 일반 N · 대학 N" text next to the
+  // Whether the plain "총 N · 디딤돌 N · 대학 N" text next to the
   // "등록 요약" title should show — every 지난 기록 screen that isn't
   // already showing its own real stats via archiveShowCards(), so the
   // header always has the same totals line no matter which of
@@ -627,12 +627,12 @@
   function buildSummaryText(list, headerLabel, filterMode) {
     var g = list.filter(function (p) { return p.flow === 'general'; }).length;
     var u = list.filter(function (p) { return p.flow === 'univ'; }).length;
-    var countLine = filterMode === 'general' ? '일반목장 등록 ' + list.length + '명\n'
+    var countLine = filterMode === 'general' ? '디딤돌목장 등록 ' + list.length + '명\n'
       : filterMode === 'univ' ? '대학목장 등록 ' + list.length + '명\n'
-      : '총 ' + list.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n';
+      : '총 ' + list.length + '명 · 디딤돌목장 ' + g + '명 / 대학목장 ' + u + '명\n';
     var s = '[주안교회 새가족 등록 요약]\n' + headerLabel + '\n' + countLine;
     list.forEach(function (p, i) {
-      s += '\n' + (i + 1) + '. ' + p.name + ' · ' + (p.flow === 'univ' ? '대학목장' : '일반목장') + '\n';
+      s += '\n' + (i + 1) + '. ' + p.name + ' · ' + (p.flow === 'univ' ? '대학목장' : '디딤돌목장') + '\n';
       if (p.info) {
         s += line('연락처', p.info.contact) + line('카카오톡', p.info.kakao) + line('생년월일', p.info.birth) + line('비자', p.info.visa) + line('전공', p.info.major) + line('인도자', p.info.leader) + line('세례여부', p.info.baptism) + line('이전출석교회', p.info.prevChurch) + line('이전봉사부서', p.info.prevDept);
       }
@@ -698,7 +698,7 @@
       name: d.name, contact: d.contact, kakao: d.kakao, birth: d.birth,
       leader: d.leader, visa: d.visa, job: d.major, baptism: d.baptism,
       prevChurch: d.prevChurch, prevDept: d.prevDept,
-      group: d.flow === 'univ' ? '대학목장' : '일반목장',
+      group: d.flow === 'univ' ? '대학목장' : '디딤돌목장',
       week1: fullDateFromMd(d.week1, d.regDate), week2: fullDateFromMd(d.week2, d.regDate),
       week3: fullDateFromMd(d.week3, d.regDate), week4: fullDateFromMd(d.week4, d.regDate),
       cellGroup: d.cellGroup, kakaoGroupStatus: d.kakaoGroupStatus
@@ -973,7 +973,7 @@
     // showing below, the per-date stat cards already cover this.
     if (archiveShowGrandTotal()) {
       var grandTotals = archiveTotals();
-      html += '<span class="summary-title-total">총 ' + grandTotals.total + ' · 일반 ' + grandTotals.general + ' · 대학 ' + grandTotals.univ + '</span>';
+      html += '<span class="summary-title-total">총 ' + grandTotals.total + ' · 디딤돌 ' + grandTotals.general + ' · 대학 ' + grandTotals.univ + '</span>';
     }
     html += '</div>';
     html += '<div id="summaryStats">' + renderSummaryStats() + '</div>';
@@ -1012,7 +1012,7 @@
     if (showCards) {
       html += '<div class="stat-row">';
       html += '<button class="stat-card" data-action="setFilterAll"><div class="stat-num">' + totalCount + '</div><div class="stat-label">총 등록</div>' + (s.summaryFilter === 'all' ? '<div class="stat-line all"></div>' : '') + '</button>';
-      html += '<button class="stat-card" data-action="setFilterGeneral"><div class="stat-num general">' + generalCount + '</div><div class="stat-label">일반목장</div>' + (s.summaryFilter === 'general' ? '<div class="stat-line general"></div>' : '') + '</button>';
+      html += '<button class="stat-card" data-action="setFilterGeneral"><div class="stat-num general">' + generalCount + '</div><div class="stat-label">디딤돌목장</div>' + (s.summaryFilter === 'general' ? '<div class="stat-line general"></div>' : '') + '</button>';
       html += '<button class="stat-card" data-action="setFilterUniv"><div class="stat-num univ">' + univCount + '</div><div class="stat-label">대학목장</div>' + (s.summaryFilter === 'univ' ? '<div class="stat-line univ"></div>' : '') + '</button>';
       html += '</div><p class="stat-hint">카드를 눌러 목장별로 필터링하세요 · Tap a card to filter</p>';
     }
@@ -1093,7 +1093,7 @@
       filtered.forEach(function (p) {
         var realIndex = people.indexOf(p);
         var info = p.info || {};
-        var tag = p.flow === 'univ' ? '<span class="tag tag-univ">대학</span>' : '<span class="tag tag-general">일반</span>';
+        var tag = p.flow === 'univ' ? '<span class="tag tag-univ">대학</span>' : '<span class="tag tag-general">디딤돌</span>';
         var chev = editable ? '<span class="chev">›</span>' : '';
         var action = editable ? ' data-action="startEdit" data-index="' + realIndex + '"' : '';
         if (showEduCell) {
@@ -1205,7 +1205,7 @@
       '<p class="sheet-sub">공유할 목장을 선택한 뒤 복사하거나 바로 공유할 수 있습니다.</p>' +
       '<div class="archive-display-toggle">' +
       '<button type="button" class="archive-display-btn' + (f === 'all' ? ' active' : '') + '" data-action="setSummaryPreviewFilterAll">총 등록</button>' +
-      '<button type="button" class="archive-display-btn' + (f === 'general' ? ' active' : '') + '" data-action="setSummaryPreviewFilterGeneral">일반목장</button>' +
+      '<button type="button" class="archive-display-btn' + (f === 'general' ? ' active' : '') + '" data-action="setSummaryPreviewFilterGeneral">디딤돌목장</button>' +
       '<button type="button" class="archive-display-btn' + (f === 'univ' ? ' active' : '') + '" data-action="setSummaryPreviewFilterUniv">대학목장</button>' +
       '</div>' +
       '<div class="univ-msg-box"><pre>' + esc(summaryPreviewText()) + '</pre></div>' +
@@ -1229,7 +1229,7 @@
     html += '<div class="sheet-head" style="margin-bottom:16px"><button class="btn-pill" data-action="requestClose">← 뒤로</button><h3>' + (isEdit ? '등록 정보 수정' : '등록 정보') + '</h3></div>';
 
     if (!isEdit) {
-      html += viewRow('목장 구분', isGeneral ? '일반목장' : '대학목장');
+      html += viewRow('목장 구분', isGeneral ? '디딤돌목장' : '대학목장');
       html += viewRow('이름 / Name', d.name);
       html += '<div class="edit-divider"></div><p class="edit-detail-label">상세 정보</p>';
       html += viewRow('연락처 / Contact', d.contact);
@@ -1254,7 +1254,7 @@
     } else {
       html += '<label class="edit-label">목장 구분</label>';
       html += '<div class="edit-flow-toggle">';
-      html += '<button type="button" class="edit-flow-btn ' + (isGeneral ? 'active-general' : '') + '" data-action="setEditFlowGeneral">일반목장</button>';
+      html += '<button type="button" class="edit-flow-btn ' + (isGeneral ? 'active-general' : '') + '" data-action="setEditFlowGeneral">디딤돌목장</button>';
       html += '<button type="button" class="edit-flow-btn ' + (!isGeneral ? 'active-univ' : '') + '" data-action="setEditFlowUniv">대학목장</button>';
       html += '</div>';
 
