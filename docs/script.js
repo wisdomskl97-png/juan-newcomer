@@ -18,6 +18,7 @@
     showUnivMsg: false,
     showSummaryPreview: false,
     summaryPreviewMonth: null,
+    summaryPreviewFilter: 'all',
     summaryFilter: 'all',
     searchQuery: '',
     editIndex: null,
@@ -618,10 +619,18 @@
     s += '\n대학팀에서 연락 부탁드립니다 🙏';
     return s;
   }
-  function buildSummaryText(list, headerLabel) {
+  // filterMode restricts which flow is included ('all' | 'general' | 'univ')
+  // so 공유하기/복사하기 can share just one 목장's list instead of everyone.
+  function filterByFlow(list, filterMode) {
+    return list.filter(function (p) { return filterMode === 'all' || (filterMode === 'univ' ? p.flow === 'univ' : p.flow !== 'univ'); });
+  }
+  function buildSummaryText(list, headerLabel, filterMode) {
     var g = list.filter(function (p) { return p.flow === 'general'; }).length;
     var u = list.filter(function (p) { return p.flow === 'univ'; }).length;
-    var s = '[주안교회 새가족 등록 요약]\n' + headerLabel + '\n총 ' + list.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n';
+    var countLine = filterMode === 'general' ? '일반목장 등록 ' + list.length + '명\n'
+      : filterMode === 'univ' ? '대학목장 등록 ' + list.length + '명\n'
+      : '총 ' + list.length + '명 · 일반목장 ' + g + '명 / 대학목장 ' + u + '명\n';
+    var s = '[주안교회 새가족 등록 요약]\n' + headerLabel + '\n' + countLine;
     list.forEach(function (p, i) {
       s += '\n' + (i + 1) + '. ' + p.name + ' · ' + (p.flow === 'univ' ? '대학목장' : '일반목장') + '\n';
       if (p.info) {
@@ -631,7 +640,7 @@
     return s;
   }
   function summaryText() {
-    return buildSummaryText(activeList(), activeDateLabel());
+    return buildSummaryText(filterByFlow(activeList(), state.summaryPreviewFilter), activeDateLabel(), state.summaryPreviewFilter);
   }
 
   function monthSummaryLabel(monthKey) {
@@ -646,7 +655,7 @@
     return all;
   }
   function monthSummaryText(monthKey) {
-    return buildSummaryText(monthPeopleList(monthKey), monthSummaryLabel(monthKey));
+    return buildSummaryText(filterByFlow(monthPeopleList(monthKey), state.summaryPreviewFilter), monthSummaryLabel(monthKey), state.summaryPreviewFilter);
   }
 
   function startEdit(i) {
@@ -1189,10 +1198,16 @@
     if (!state.showSummaryPreview) return '';
     var heading = state.summaryPreviewMonth ? monthSummaryLabel(state.summaryPreviewMonth) + ' 등록 요약'
       : (state.viewMode === 'today' ? todayShortLabel() + ' 등록 요약' : '등록 요약');
+    var f = state.summaryPreviewFilter;
     return (
       '<div class="overlay ' + enter + '" data-overlay="summarypreview"><div class="sheet">' +
       '<div class="sheet-head"><h3>' + heading + '</h3><button class="btn-pill" data-action="closeSummaryPreview">닫기</button></div>' +
-      '<p class="sheet-sub">아래 내용을 복사하거나 바로 공유할 수 있습니다.</p>' +
+      '<p class="sheet-sub">공유할 목장을 선택한 뒤 복사하거나 바로 공유할 수 있습니다.</p>' +
+      '<div class="archive-display-toggle">' +
+      '<button type="button" class="archive-display-btn' + (f === 'all' ? ' active' : '') + '" data-action="setSummaryPreviewFilterAll">총 등록</button>' +
+      '<button type="button" class="archive-display-btn' + (f === 'general' ? ' active' : '') + '" data-action="setSummaryPreviewFilterGeneral">일반목장</button>' +
+      '<button type="button" class="archive-display-btn' + (f === 'univ' ? ' active' : '') + '" data-action="setSummaryPreviewFilterUniv">대학목장</button>' +
+      '</div>' +
       '<div class="univ-msg-box"><pre>' + esc(summaryPreviewText()) + '</pre></div>' +
       '<div class="sheet-actions">' +
       '<button style="color:#fff;background:#4B5AA3" data-action="copySummary">' + (state.copiedSummary ? '✓ 복사됨' : '복사하기 · Copy') + '</button>' +
@@ -1438,9 +1453,12 @@
     cancelDiscard: function () { update(function () { state.showDiscard = false; }); },
     openUnivMsg: function () { update(function () { state.showUnivMsg = true; }); },
     closeUnivMsg: function () { update(function () { state.showUnivMsg = false; }); },
-    openSummaryPreview: function () { update(function () { state.summaryPreviewMonth = null; state.showSummaryPreview = true; }); },
-    openMonthSummaryPreview: function () { update(function () { state.summaryPreviewMonth = state.archiveMonth; state.showSummaryPreview = true; }); },
+    openSummaryPreview: function () { update(function () { state.summaryPreviewMonth = null; state.summaryPreviewFilter = 'all'; state.showSummaryPreview = true; }); },
+    openMonthSummaryPreview: function () { update(function () { state.summaryPreviewMonth = state.archiveMonth; state.summaryPreviewFilter = 'all'; state.showSummaryPreview = true; }); },
     closeSummaryPreview: function () { update(function () { state.showSummaryPreview = false; state.summaryPreviewMonth = null; }); },
+    setSummaryPreviewFilterAll: function () { update(function () { state.summaryPreviewFilter = 'all'; state.copiedSummary = false; state.sharedSummary = false; }); },
+    setSummaryPreviewFilterGeneral: function () { update(function () { state.summaryPreviewFilter = 'general'; state.copiedSummary = false; state.sharedSummary = false; }); },
+    setSummaryPreviewFilterUniv: function () { update(function () { state.summaryPreviewFilter = 'univ'; state.copiedSummary = false; state.sharedSummary = false; }); },
     copyUnivMsg: function () { copyText(univMessage(), 'copiedUnivMsg'); },
     shareUnivMsg: function () { shareText(univMessage(), 'sharedUnivMsg'); },
     copySummary: function () { copyText(summaryPreviewText(), 'copiedSummary'); },
